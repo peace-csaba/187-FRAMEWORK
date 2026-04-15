@@ -61,30 +61,136 @@ canUsePlateRewards()
 ////////////////////////////////////////////////////////////////////////
 
 // Generic framework print helper
-customprint(text)
+frameworkPrint(text)
 {
     mode = getDvarInt("prints");
 
     if (!isDefined(mode))
         mode = 1;
 
-    switch (mode)
+    if (mode <= 0)
+        return;
+
+    if (mode == 2)
     {
-        case 0:
-            break;
-
-        case 1:
-            self iprintln(text);
-            break;
-
-        case 2:
-            self iprintlnbold(text);
-            break;
-
-        default:
-            self iprintln(text);
-            break;
+        self iprintlnbold(text);
+        return;
     }
+
+    self iprintln(text);
+}
+
+////////////////////////////////////////////////////////////////////////
+
+// Legacy alias
+customprint(text)
+{
+    self frameworkPrint(text);
+}
+
+////////////////////////////////////////////////////////////////////////
+
+frameworkBroadcastSettingChange(label, value, color)
+{
+    foreach (player in level.players)
+    {
+        if (isDefined(player))
+            player iprintln(level.prefix + "^1[DVAR]^7 » " + color + label + ":^7 " + color + value + " ^7(updated)");
+    }
+}
+
+////////////////////////////////////////////////////////////////////////
+
+frameworkEnsureStimDvars()
+{
+    speed = getDvarFloat("stim_boost_speed");
+    duration = getDvarInt("stim_boost_duration");
+    decay = getDvarFloat("stim_boost_decay");
+
+    if (!isDefined(speed) || speed <= 0)
+    {
+        speed = 1.05;
+        setDvar("stim_boost_speed", "" + speed);
+    }
+
+    if (!isDefined(duration) || duration <= 0)
+    {
+        duration = 10;
+        setDvar("stim_boost_duration", "" + duration);
+    }
+
+    if (!isDefined(decay) || decay < 0)
+    {
+        decay = 0.1;
+        setDvar("stim_boost_decay", "" + decay);
+    }
+
+    level.frameworkStimSpeed = speed;
+    level.frameworkStimDuration = duration;
+    level.frameworkStimDecay = decay;
+}
+
+////////////////////////////////////////////////////////////////////////
+
+frameworkCacheStimDvars()
+{
+    level.cachedStimSpeed = level.frameworkStimSpeed;
+    level.cachedStimDuration = level.frameworkStimDuration;
+    level.cachedStimDecay = level.frameworkStimDecay;
+}
+
+////////////////////////////////////////////////////////////////////////
+
+frameworkCheckStimDvarChanges()
+{
+    speed = getDvarFloat("stim_boost_speed");
+    duration = getDvarInt("stim_boost_duration");
+    decay = getDvarFloat("stim_boost_decay");
+
+    if (!isDefined(speed) || speed <= 0)
+        speed = level.cachedStimSpeed;
+
+    if (!isDefined(duration) || duration <= 0)
+        duration = level.cachedStimDuration;
+
+    if (!isDefined(decay) || decay < 0)
+        decay = level.cachedStimDecay;
+
+    if (speed != level.cachedStimSpeed)
+    {
+        level.cachedStimSpeed = speed;
+        frameworkBroadcastSettingChange("Stim Speed", speed, "^2");
+    }
+
+    if (duration != level.cachedStimDuration)
+    {
+        level.cachedStimDuration = duration;
+        frameworkBroadcastSettingChange("Stim Duration", duration, "^3");
+    }
+
+    if (decay != level.cachedStimDecay)
+    {
+        level.cachedStimDecay = decay;
+        frameworkBroadcastSettingChange("Stim Decay", decay, "^1");
+    }
+
+    level.frameworkStimSpeed = speed;
+    level.frameworkStimDuration = duration;
+    level.frameworkStimDecay = decay;
+}
+
+////////////////////////////////////////////////////////////////////////
+
+frameworkEnforceStimDvars()
+{
+    if (getDvarFloat("stim_boost_speed") != level.frameworkStimSpeed)
+        setDvar("stim_boost_speed", "" + level.frameworkStimSpeed);
+
+    if (getDvarInt("stim_boost_duration") != level.frameworkStimDuration)
+        setDvar("stim_boost_duration", "" + level.frameworkStimDuration);
+
+    if (getDvarFloat("stim_boost_decay") != level.frameworkStimDecay)
+        setDvar("stim_boost_decay", "" + level.frameworkStimDecay);
 }
 
 ////////////////////////////////////////////////////////////////////////
@@ -101,112 +207,14 @@ initDvarsProtection()
 {
     level endon("game_ended");
 
-    // =========================
-    // SAFE DEFAULTS
-    // =========================
-    if (getDvarFloat("stim_boost_speed") <= 0)
-        setDvar("stim_boost_speed", "1.05");
-
-    if (getDvarInt("stim_boost_duration") <= 0)
-        setDvar("stim_boost_duration", "10");
-
-    if (getDvarFloat("stim_boost_decay") < 0)
-        setDvar("stim_boost_decay", "0.1");
-
-    // =========================
-    // INITIAL CACHE
-    // =========================
-    level.stim_speed_host = getDvarFloat("stim_boost_speed");
-    level.stim_duration_host = getDvarInt("stim_boost_duration");
-    level.stim_decay_host = getDvarFloat("stim_boost_decay");
-
-    level.last_speed = level.stim_speed_host;
-    level.last_duration = level.stim_duration_host;
-    level.last_decay = level.stim_decay_host;
+    frameworkEnsureStimDvars();
+    frameworkCacheStimDvars();
 
     for (;;)
     {
         wait 1;
-
-        newSpeed = getDvarFloat("stim_boost_speed");
-        newDuration = getDvarInt("stim_boost_duration");
-        newDecay = getDvarFloat("stim_boost_decay");
-
-        // =========================
-        // CLAMP BAD VALUES
-        // =========================
-        if (newSpeed <= 0)
-        {
-            newSpeed = level.last_speed;
-            setDvar("stim_boost_speed", "" + newSpeed);
-        }
-
-        if (newDuration <= 0)
-        {
-            newDuration = level.last_duration;
-            setDvar("stim_boost_duration", "" + newDuration);
-        }
-
-        if (newDecay < 0)
-        {
-            newDecay = level.last_decay;
-            setDvar("stim_boost_decay", "" + newDecay);
-        }
-
-        // =========================
-        // DETECT CHANGES
-        // =========================
-        if (newSpeed != level.last_speed)
-        {
-            level.last_speed = newSpeed;
-
-            foreach (p in level.players)
-            {
-                if (isDefined(p))
-                    p iprintln(level.prefix + "^1[DVAR]^7 » ^2Stim Speed:^7 ^2" + newSpeed + " ^7(updated)");
-            }
-        }
-
-        if (newDuration != level.last_duration)
-        {
-            level.last_duration = newDuration;
-
-            foreach (p in level.players)
-            {
-                if (isDefined(p))
-                    p iprintln(level.prefix + "^1[DVAR]^7 » ^3Stim Duration:^7 ^3" + newDuration + " ^7(updated)");
-            }
-        }
-
-        if (newDecay != level.last_decay)
-        {
-            level.last_decay = newDecay;
-
-            foreach (p in level.players)
-            {
-                if (isDefined(p))
-                    p iprintln(level.prefix + "^1[DVAR]^7 » ^1Stim Decay:^7 ^1" + newDecay + " ^7(updated)");
-            }
-        }
-
-        // =========================
-        // UPDATE MASTER VALUES
-        // =========================
-        level.stim_speed_host = newSpeed;
-        level.stim_duration_host = newDuration;
-        level.stim_decay_host = newDecay;
-
-        // =========================
-        // FORCE LOCK / SYNC
-        // =========================
-        if (getDvarFloat("stim_boost_speed") != level.stim_speed_host)
-            setDvar("stim_boost_speed", "" + level.stim_speed_host);
-
-        if (getDvarInt("stim_boost_duration") != level.stim_duration_host)
-            setDvar("stim_boost_duration", "" + level.stim_duration_host);
-
-        if (getDvarFloat("stim_boost_decay") != level.stim_decay_host)
-            setDvar("stim_boost_decay", "" + level.stim_decay_host);
+        frameworkCheckStimDvarChanges();
+        frameworkEnforceStimDvars();
     }
 }
 

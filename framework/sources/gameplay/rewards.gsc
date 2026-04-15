@@ -134,33 +134,28 @@ getRewardsPlayer()
 
     msg = "^7[Rewards]^7";
 
-    perkRewardsEnabled = custom_scripts\framework\sources\core\shared::isFrameworkPerkRewardsEnabled();
-
-    if (perkRewardsEnabled)
+    // Random perk on streak 1-5
+    if (!self.specialistActive && self.killStreak < 6)
     {
-        // Random perk on streak 1-5
-        if (!self.specialistActive && self.killStreak < 6)
-        {
-            perk = self custom_scripts\framework\sources\gameplay\perks::giveRandomPerk();
-            wait 0.05;
+        perk = self custom_scripts\framework\sources\gameplay\perks::giveRandomPerk();
+        wait 0.05;
 
-            if (isDefined(perk))
-            {
-                name = custom_scripts\framework\sources\gameplay\perks::getPerkName(perk);
-                msg += " ^7• ^2+" + name + " Perk";
-            }
+        if (isDefined(perk))
+        {
+            name = custom_scripts\framework\sources\gameplay\perks::getPerkName(perk);
+            msg += " ^7• ^2+" + name + " Perk";
         }
-        // Real Specialist Bonus at 6 streak
-        else if (!self.specialistActive && self.killStreak >= 6)
-        {
-            count = self custom_scripts\framework\sources\gameplay\perks::giveSpecialistBonus();
-            wait 0.05;
+    }
+    // Real Specialist Bonus at 6 streak
+    else if (!self.specialistActive && self.killStreak >= 6)
+    {
+        count = self custom_scripts\framework\sources\gameplay\perks::giveSpecialistBonus();
+        wait 0.05;
 
-            if (count > 0)
-            {
-                self.specialistActive = true;
-                msg += " ^7• ^5Specialist Bonus";
-            }
+        if (count > 0)
+        {
+            self.specialistActive = true;
+            msg += " ^7• ^5Specialist Bonus";
         }
     }
 

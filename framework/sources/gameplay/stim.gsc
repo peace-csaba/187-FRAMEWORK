@@ -180,10 +180,25 @@ runStimBoost(refreshed)
     if (!isDefined(refreshed))
         refreshed = false;
 
-    // Live DVAR values
-    base = getDvarFloat("stim_boost_speed");
-    duration = getDvarInt("stim_boost_duration");
-    decay = getDvarFloat("stim_boost_decay");
+    // Framework-owned live config
+    base = 1.05;
+    duration = 10;
+    decay = 0.1;
+
+    if (isDefined(level.frameworkStimSpeed))
+        base = level.frameworkStimSpeed;
+    else
+        base = getDvarFloat("stim_boost_speed");
+
+    if (isDefined(level.frameworkStimDuration))
+        duration = level.frameworkStimDuration;
+    else
+        duration = getDvarInt("stim_boost_duration");
+
+    if (isDefined(level.frameworkStimDecay))
+        decay = level.frameworkStimDecay;
+    else
+        decay = getDvarFloat("stim_boost_decay");
 
     // Safe fallback defaults
     if (!isDefined(base) || base <= 0)
