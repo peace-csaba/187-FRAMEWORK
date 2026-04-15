@@ -11,7 +11,6 @@
 // Contains:
 // - weapon-based movement speed boosts
 // - custom weapon damage overrides
-// - one-shot weapon handling
 
 ////////////////////////////////////////////////////////////////////////
 
