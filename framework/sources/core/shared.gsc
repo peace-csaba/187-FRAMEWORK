@@ -89,26 +89,12 @@ customprint(text)
 
 ////////////////////////////////////////////////////////////////////////
 
-// Perk rewards DVAR gate
-isFrameworkPerkRewardsEnabled()
-{
-    value = getDvarInt("framework_enable_perk_rewards");
-
-    if (!isDefined(value))
-        return true;
-
-    return (value == 1);
-}
-
-////////////////////////////////////////////////////////////////////////
-
 // DVAR sync / protection
 //
 // Handles:
 // - stim_boost_speed
 // - stim_boost_duration
 // - stim_boost_decay
-// - framework_enable_perk_rewards
 //
 // This is the ONLY place that prints global update messages.
 initDvarsProtection()
@@ -127,22 +113,16 @@ initDvarsProtection()
     if (getDvarFloat("stim_boost_decay") < 0)
         setDvar("stim_boost_decay", "0.1");
 
-    perkDvar = getDvarInt("framework_enable_perk_rewards");
-    if (!isDefined(perkDvar) || (perkDvar != 0 && perkDvar != 1))
-        setDvar("framework_enable_perk_rewards", "1");
-
     // =========================
     // INITIAL CACHE
     // =========================
     level.stim_speed_host = getDvarFloat("stim_boost_speed");
     level.stim_duration_host = getDvarInt("stim_boost_duration");
     level.stim_decay_host = getDvarFloat("stim_boost_decay");
-    level.perk_rewards_enabled = getDvarInt("framework_enable_perk_rewards");
 
     level.last_speed = level.stim_speed_host;
     level.last_duration = level.stim_duration_host;
     level.last_decay = level.stim_decay_host;
-    level.last_perk_rewards = level.perk_rewards_enabled;
 
     for (;;)
     {
@@ -151,7 +131,6 @@ initDvarsProtection()
         newSpeed = getDvarFloat("stim_boost_speed");
         newDuration = getDvarInt("stim_boost_duration");
         newDecay = getDvarFloat("stim_boost_decay");
-        newPerkRewards = getDvarInt("framework_enable_perk_rewards");
 
         // =========================
         // CLAMP BAD VALUES
@@ -172,12 +151,6 @@ initDvarsProtection()
         {
             newDecay = level.last_decay;
             setDvar("stim_boost_decay", "" + newDecay);
-        }
-
-        if (newPerkRewards != 0 && newPerkRewards != 1)
-        {
-            newPerkRewards = level.last_perk_rewards;
-            setDvar("framework_enable_perk_rewards", "" + newPerkRewards);
         }
 
         // =========================
@@ -216,30 +189,12 @@ initDvarsProtection()
             }
         }
 
-        if (newPerkRewards != level.last_perk_rewards)
-        {
-            level.last_perk_rewards = newPerkRewards;
-            level.perk_rewards_enabled = newPerkRewards;
-
-            stateText = "^1DISABLED";
-
-            if (newPerkRewards == 1)
-                stateText = "^2ENABLED";
-
-            foreach (p in level.players)
-            {
-                if (isDefined(p))
-                    p iprintln(level.prefix + "^1[DVAR]^7 » ^5Perk Rewards:^7 " + stateText);
-            }
-        }
-
         // =========================
         // UPDATE MASTER VALUES
         // =========================
         level.stim_speed_host = newSpeed;
         level.stim_duration_host = newDuration;
         level.stim_decay_host = newDecay;
-        level.perk_rewards_enabled = newPerkRewards;
 
         // =========================
         // FORCE LOCK / SYNC
@@ -252,9 +207,6 @@ initDvarsProtection()
 
         if (getDvarFloat("stim_boost_decay") != level.stim_decay_host)
             setDvar("stim_boost_decay", "" + level.stim_decay_host);
-
-        if (getDvarInt("framework_enable_perk_rewards") != level.perk_rewards_enabled)
-            setDvar("framework_enable_perk_rewards", "" + level.perk_rewards_enabled);
     }
 }
 
@@ -266,7 +218,6 @@ initDvarsProtection()
 // - stimbase <float>
 // - stimduration <int>
 // - stimdecay <float>
-// - perks <0/1>
 //
 // This function only sets DVARs.
 // Global feedback is printed by initDvarsProtection().
@@ -302,22 +253,6 @@ handleFrameworkHostCommand(cmd, arg1)
             }
 
             setDvar("stim_boost_decay", "" + arg1);
-            return true;
-
-        case "perks":
-            if (!isDefined(arg1))
-            {
-                self iprintln(level.prefix + "^1[DVAR]^7 » Usage:^7 ^5perks <0/1>");
-                return true;
-            }
-
-            if (arg1 != "0" && arg1 != "1")
-            {
-                self iprintln(level.prefix + "^1[DVAR]^7 » Usage:^7 ^5perks <0/1>");
-                return true;
-            }
-
-            setDvar("framework_enable_perk_rewards", "" + arg1);
             return true;
     }
 

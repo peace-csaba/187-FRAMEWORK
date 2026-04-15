@@ -21,7 +21,6 @@ buildPerkList()
     level.perkUiMap = [];
     level.perkNames = [];
 
-    // Standard reward perks
     addRewardPerk("specialty_warhead",          "specialty_quickswap",        "Amped");
     addRewardPerk("specialty_tac_resist",       "specialty_selectivehearing", "Battle Hardened");
     addRewardPerk("specialty_tactical_recon",   "specialty_tactical_recon",   "Engineer");
@@ -40,7 +39,6 @@ buildPerkList()
     addRewardPerk("specialty_heavy_metal",      "specialty_heavy_metal",      "Kill Chain");
     addRewardPerk("specialty_scavenger_plus",   "specialty_scavenger_plus",   "Scavenger");
 
-    // Custom BR reward perks
     addRewardPerk("specialty_br_reinforced",    "specialty_specialist_bonus", "Tempered");
     addRewardPerk("specialty_br_advancedscout", "specialty_specialist_bonus", "Combat Scout");
     addRewardPerk("specialty_br_serpentine",    "specialty_specialist_bonus", "Serpentine");
@@ -132,6 +130,9 @@ getMappedPerkSplash(perk)
 
         case "specialty_surveillance":
             return "specialty_surveillance";
+
+        case "specialty_munitions_2":
+            return "specialty_munitions_2";
 
         case "specialty_strategist":
             return "specialty_strategist";
@@ -302,7 +303,10 @@ giveRandomPerk()
     if (!isDefined(self) || !isAlive(self))
         return undefined;
 
-    if (!isDefined(level.perkList) || level.perkList.size <= 0)
+    if (!isDefined(level.perkList))
+        return undefined;
+
+    if (level.perkList.size <= 0)
         return undefined;
 
     perk = level.perkList[randomint(level.perkList.size)];
