@@ -19,6 +19,3 @@ DESIGN GOALS
 - Separate low-level engine-facing code from higher-level gameplay logic.
 - Keep reusable systems modular so future forks and rewrites stay manageable.
 - Prefer clean source ownership over expanding one script into too many responsibilities.
-
-STATUS
-187 — FRAMEWORK is an active long-term framework project that began on 03.25.2026 and continues to evolve around stability, reusable systems, and cleaner project ownership.
