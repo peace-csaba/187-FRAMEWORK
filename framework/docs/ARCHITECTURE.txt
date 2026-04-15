@@ -8,8 +8,8 @@ BOOT FLOW
 1. custom_scripts/framework.gsc starts the framework.
 2. framework.gsc initializes startup flags, shared state, and player lifecycle hooks.
 3. framework.gsc starts shared framework systems such as DVAR protection and live config sync.
-4. framework.gsc routes into framework-owned gameplay and gamemode systems.
-5. custom_scripts/framework/gamemode.gsc acts as the gamemode router layer.
+4. framework.gsc routes into framework-owned gameplay systems.
+5. custom_scripts/framework/gamemode.gsc remains as a minimal framework router layer.
 6. source modules run by responsibility group.
 
 TOP-LEVEL LAYOUT
@@ -18,16 +18,13 @@ custom_scripts/framework.gsc
 Single project bootstrap and main framework entry.
 
 custom_scripts/framework/gamemode.gsc
-Framework-owned router for gamemode or project-specific systems.
+Framework-owned router layer kept as a minimal safe stub.
 
 custom_scripts/framework/sources/core/
 Shared infrastructure, UI helpers, DVAR handling, and engine-facing wrappers.
 
 custom_scripts/framework/sources/gameplay/
 Reusable gameplay systems, reward flow, perk systems, progression-related logic, and player-driven gameplay modules.
-
-custom_scripts/framework/sources/gamemode/
-Project-specific or mode-specific systems.
 
 SOURCE RESPONSIBILITIES
 
@@ -49,30 +46,11 @@ Kill reward flow, SR gain/loss, stat messaging, rank text formatting, and reward
 gameplay/stim.gsc
 Stim reward logic, live stim boost behavior, and DVAR-driven stim tuning.
 
-gamemode/movement.gsc
-Movement-related systems such as speed, jump, gravity, slide, spin, and handling changes.
-
-gamemode/combat.gsc
-Combat-related systems such as weapons, recoil, ammo, executions, killstreak-related gameplay, and perk-linked combat changes.
-
-gamemode/visual.gsc
-Vision, HUD-facing visual changes, outlines, camos, and viewmodel or body presentation changes.
-
-gamemode/world.gsc
-Map rules, barriers, vehicles, out-of-bounds handling, and world-level toggles.
-
-gamemode/player.gsc
-Player-only helpers and local player control systems such as noclip or godmode-style utilities.
-
-gamemode/bots.gsc
-Bot spawning, bot setup, follow behavior, aggro, presets, and other bot logic.
-
 SYSTEM OWNERSHIP
 - framework.gsc owns startup and player lifecycle entry.
-- gamemode.gsc owns project-specific routing.
+- gamemode.gsc is retained only as a framework-owned router stub.
 - core/ owns shared helpers, common UI, engine wrappers, and framework-wide control systems.
 - gameplay/ owns reusable reward, perk, progression, and stim systems.
-- gamemode/ owns project-specific gameplay behavior.
 
 LIVE CONFIGURATION
 The framework supports live DVAR-based configuration for selected systems.
@@ -87,12 +65,12 @@ These values are synchronized and protected through shared framework logic rathe
 ARCHITECTURE RULES
 - Do not create multiple main entry files.
 - Keep framework.gsc as the only bootstrap.
-- Keep gamemode.gsc as the only gamemode router.
+- Keep gamemode.gsc as the only router file, even if minimal.
 - Put new systems into the correct source group based on responsibility.
 - Keep engine-facing code separate from higher-level gameplay logic whenever possible.
 - Prefer modular source files over expanding framework.gsc into feature-heavy logic.
 - Let shared systems handle global config and state when possible.
 - Keep gameplay systems focused on gameplay behavior, not framework bootstrap logic.
 
-CURRENT DIRECTION
-The framework is organized around ownership, separation of concerns, and long-term maintainability. Reusable systems belong in core or gameplay. Project-specific behavior belongs in gamemode. Live-tuned gameplay values should be controlled through shared framework systems when possible.
+RELEASE DIRECTION
+This release removes legacy gamemode-specific implementation and keeps the public framework centered on clean, framework-owned core and gameplay systems. Future project-specific behavior should be rebuilt on top of this base with clear ownership.

@@ -1,6 +1,6 @@
 // 📌 187 — FRAMEWORK
 
-// Version: 0.4
+// Version: 1.0
 
 ////////////////////////////////////////////////////////////////////////
 
@@ -17,7 +17,9 @@ setupFrameworkConfig()
     level.enableStimBoost = true;
     level.enablePlateRewards = true;
     level.enableWeaponSpeedBoost = true;
-    level.enableGamemode = true;
+
+    // Disabled: legacy gamemode implementation removed
+    level.enableGamemode = false;
 }
 
 ////////////////////////////////////////////////////////////////////////
@@ -84,7 +86,6 @@ init()
     custom_scripts\framework\sources\gameplay\perks::initPerkNames();
     custom_scripts\framework\sources\gameplay\perks::buildPerkList();
 
-    // Live DVAR sync / protection
     level thread custom_scripts\framework\sources\core\shared::initDvarsProtection();
 
     if (level.enableGamemode)
@@ -155,7 +156,7 @@ onPlayerSpawned()
             self.specialistActive = false;
 
         if (isAlive(self))
-            self setMoveSpeedScale(1.0);
+            self setmovespeedscale(1.0);
 
         if (level.enableKillRewards)
             self thread custom_scripts\framework\sources\gameplay\rewards::killRewards();

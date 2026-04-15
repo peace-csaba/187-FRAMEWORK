@@ -39,5 +39,6 @@ Started: 03.25.2026
 - Added DVAR-driven stim boost tuning
 - Added framework-wide DVAR sync / protection flow
 - Added DVAR-controlled perk reward enable / disable support
-- Continued cleanup of modular ownership between core, gameplay, and gamemode systems
+- Removed legacy gamemode-specific implementation from the public release
+- Reduced the release to framework-owned core and gameplay systems
 - Current focus remains stability, reusable systems, and long-term framework growth
