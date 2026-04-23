@@ -18,8 +18,8 @@ setupFrameworkConfig()
     level.enablePlateRewards = true;
     level.enableWeaponSpeedBoost = true;
 
-    // Disabled: legacy gamemode implementation removed
-    level.enableGamemode = false;
+    // Clean framework-owned gamemode layer
+    level.enableGamemode = true;
 }
 
 ////////////////////////////////////////////////////////////////////////
