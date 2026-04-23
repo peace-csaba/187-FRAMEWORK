@@ -26,8 +26,6 @@ The goal of this version is to keep the public framework clean, modular, and eas
 
 ## Console DVAR Commands
 
-Use these in console with `set`:
-
 ```commands
 fw_nohud
 
