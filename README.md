@@ -9,13 +9,4 @@ This package now includes a fresh gamemode scaffold under `framework/sources/gam
 
 
 ## Full Commands List Updated
-fw_nohud
-
-fw_addbot
-fw_kickbot
-fw_bot_team
-fw_bot_difficulty
-
-fw_stim_boost_speed
-fw_stim_boost_duration
-fw_stim_boost_decay
+fw_nohud | fw_addbot | fw_kickbot | fw_bot_team | fw_bot_difficulty | fw_stim_boost_speed | fw_stim_boost_duration | fw_stim_boost_decay
