@@ -187,18 +187,12 @@ runStimBoost(refreshed)
 
     if (isDefined(level.frameworkStimSpeed))
         base = level.frameworkStimSpeed;
-    else
-        base = getDvarFloat("stim_boost_speed");
 
     if (isDefined(level.frameworkStimDuration))
         duration = level.frameworkStimDuration;
-    else
-        duration = getDvarInt("stim_boost_duration");
 
     if (isDefined(level.frameworkStimDecay))
         decay = level.frameworkStimDecay;
-    else
-        decay = getDvarFloat("stim_boost_decay");
 
     // Safe fallback defaults
     if (!isDefined(base) || base <= 0)

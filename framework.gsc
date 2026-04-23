@@ -1,6 +1,6 @@
 // 📌 187 — FRAMEWORK
 
-// Version: 1.2
+// Version: 1.3
 
 ////////////////////////////////////////////////////////////////////////
 
@@ -18,6 +18,7 @@ setupFrameworkConfig()
     level.enablePlateRewards = true;
     level.enableWeaponSpeedBoost = true;
 
+    // Clean framework-owned gamemode layer
     level.enableGamemode = true;
 }
 

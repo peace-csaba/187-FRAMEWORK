@@ -101,28 +101,37 @@ frameworkBroadcastSettingChange(label, value, color)
 
 ////////////////////////////////////////////////////////////////////////
 
+// =========================
+// FRAMEWORK STIM DVARS
+// =========================
+//
+// DVARs:
+// - fw_stim_boost_speed
+// - fw_stim_boost_duration
+// - fw_stim_boost_decay
+
 frameworkEnsureStimDvars()
 {
-    speed = getDvarFloat("stim_boost_speed");
-    duration = getDvarInt("stim_boost_duration");
-    decay = getDvarFloat("stim_boost_decay");
+    speed = getDvarFloat("fw_stim_boost_speed");
+    duration = getDvarInt("fw_stim_boost_duration");
+    decay = getDvarFloat("fw_stim_boost_decay");
 
     if (!isDefined(speed) || speed <= 0)
     {
         speed = 1.05;
-        setDvar("stim_boost_speed", "" + speed);
+        setDvar("fw_stim_boost_speed", "" + speed);
     }
 
     if (!isDefined(duration) || duration <= 0)
     {
         duration = 10;
-        setDvar("stim_boost_duration", "" + duration);
+        setDvar("fw_stim_boost_duration", "" + duration);
     }
 
     if (!isDefined(decay) || decay < 0)
     {
         decay = 0.1;
-        setDvar("stim_boost_decay", "" + decay);
+        setDvar("fw_stim_boost_decay", "" + decay);
     }
 
     level.frameworkStimSpeed = speed;
@@ -143,9 +152,9 @@ frameworkCacheStimDvars()
 
 frameworkCheckStimDvarChanges()
 {
-    speed = getDvarFloat("stim_boost_speed");
-    duration = getDvarInt("stim_boost_duration");
-    decay = getDvarFloat("stim_boost_decay");
+    speed = getDvarFloat("fw_stim_boost_speed");
+    duration = getDvarInt("fw_stim_boost_duration");
+    decay = getDvarFloat("fw_stim_boost_decay");
 
     if (!isDefined(speed) || speed <= 0)
         speed = level.cachedStimSpeed;
@@ -183,14 +192,14 @@ frameworkCheckStimDvarChanges()
 
 frameworkEnforceStimDvars()
 {
-    if (getDvarFloat("stim_boost_speed") != level.frameworkStimSpeed)
-        setDvar("stim_boost_speed", "" + level.frameworkStimSpeed);
+    if (getDvarFloat("fw_stim_boost_speed") != level.frameworkStimSpeed)
+        setDvar("fw_stim_boost_speed", "" + level.frameworkStimSpeed);
 
-    if (getDvarInt("stim_boost_duration") != level.frameworkStimDuration)
-        setDvar("stim_boost_duration", "" + level.frameworkStimDuration);
+    if (getDvarInt("fw_stim_boost_duration") != level.frameworkStimDuration)
+        setDvar("fw_stim_boost_duration", "" + level.frameworkStimDuration);
 
-    if (getDvarFloat("stim_boost_decay") != level.frameworkStimDecay)
-        setDvar("stim_boost_decay", "" + level.frameworkStimDecay);
+    if (getDvarFloat("fw_stim_boost_decay") != level.frameworkStimDecay)
+        setDvar("fw_stim_boost_decay", "" + level.frameworkStimDecay);
 }
 
 ////////////////////////////////////////////////////////////////////////
@@ -198,9 +207,9 @@ frameworkEnforceStimDvars()
 // DVAR sync / protection
 //
 // Handles:
-// - stim_boost_speed
-// - stim_boost_duration
-// - stim_boost_decay
+// - fw_stim_boost_speed
+// - fw_stim_boost_duration
+// - fw_stim_boost_decay
 //
 // This is the ONLY place that prints global update messages.
 initDvarsProtection()
@@ -220,47 +229,47 @@ initDvarsProtection()
 
 ////////////////////////////////////////////////////////////////////////
 
-// Ingame command handler
+// Ingame host helper
 //
 // Commands:
-// - stimbase <float>
-// - stimduration <int>
-// - stimdecay <float>
+// - fw_stim_boost_speed <float>
+// - fw_stim_boost_duration <int>
+// - fw_stim_boost_decay <float>
 //
-// This function only sets DVARs.
+// This only sets DVARs.
 // Global feedback is printed by initDvarsProtection().
 handleFrameworkHostCommand(cmd, arg1)
 {
     switch (cmd)
     {
-        case "stimbase":
+        case "fw_stim_boost_speed":
             if (!isDefined(arg1))
             {
-                self iprintln(level.prefix + "^1[DVAR]^7 » Usage:^7 ^5stimbase <float>");
+                self iprintln(level.prefix + "^1[DVAR]^7 » Usage:^7 ^5fw_stim_boost_speed <float>");
                 return true;
             }
 
-            setDvar("stim_boost_speed", "" + arg1);
+            setDvar("fw_stim_boost_speed", "" + arg1);
             return true;
 
-        case "stimduration":
+        case "fw_stim_boost_duration":
             if (!isDefined(arg1))
             {
-                self iprintln(level.prefix + "^1[DVAR]^7 » Usage:^7 ^5stimduration <int>");
+                self iprintln(level.prefix + "^1[DVAR]^7 » Usage:^7 ^5fw_stim_boost_duration <int>");
                 return true;
             }
 
-            setDvar("stim_boost_duration", "" + arg1);
+            setDvar("fw_stim_boost_duration", "" + arg1);
             return true;
 
-        case "stimdecay":
+        case "fw_stim_boost_decay":
             if (!isDefined(arg1))
             {
-                self iprintln(level.prefix + "^1[DVAR]^7 » Usage:^7 ^5stimdecay <float>");
+                self iprintln(level.prefix + "^1[DVAR]^7 » Usage:^7 ^5fw_stim_boost_decay <float>");
                 return true;
             }
 
-            setDvar("stim_boost_decay", "" + arg1);
+            setDvar("fw_stim_boost_decay", "" + arg1);
             return true;
     }
 

@@ -6,19 +6,22 @@
 
 ////////////////////////////////////////////////////////////////////////
 
-// Framework-owned visual systems
+// Framework visual systems
 //
-// Rebuilt features:
-// - nohud
-// - hud
-// - togglehud
+// DVARs:
+// - fw_nohud (0/1)
 
 init()
 {
     level endon("game_ended");
 
-    if (!isDefined(level.frameworkVisualReady))
-        level.frameworkVisualReady = true;
+    if (getDvarInt("fw_nohud") != 0 && getDvarInt("fw_nohud") != 1)
+        setDvar("fw_nohud", "0");
+
+    level.frameworkNoHudState = getDvarInt("fw_nohud");
+    level.frameworkLastNoHudState = level.frameworkNoHudState;
+
+    level thread watchNoHudDvar();
 }
 
 ////////////////////////////////////////////////////////////////////////
@@ -35,13 +38,13 @@ onPlayerConnected()
         self waittill("spawned_player");
 
         self notify("stop_framework_visual_spawn");
-        self thread visualSpawnLoop();
+        self thread handleVisualSpawn();
     }
 }
 
 ////////////////////////////////////////////////////////////////////////
 
-visualSpawnLoop()
+handleVisualSpawn()
 {
     self endon("disconnect");
     self endon("death");
@@ -49,110 +52,86 @@ visualSpawnLoop()
     level endon("game_ended");
 
     wait 0.10;
-    self applyFrameworkHudState();
+    self applyHudPreference();
 }
 
 ////////////////////////////////////////////////////////////////////////
 
-applyFrameworkHudState()
+applyHudPreference()
 {
-    if (!isDefined(self.frameworkHudHidden))
-        self.frameworkHudHidden = false;
+    hidden = false;
 
-    if (self.frameworkHudHidden)
-        self setclientdvar("cg_draw2D", "0");
+    if (isDefined(self.frameworkHudHidden))
+        hidden = self.frameworkHudHidden;
+
+    if (hidden)
+    {
+        self setclientomnvar("ui_hide_full_hud", 1);
+        setDvar("LOPKSRNTTS", "0");
+    }
     else
-        self setclientdvar("cg_draw2D", "1");
-}
-
-////////////////////////////////////////////////////////////////////////
-
-enableFrameworkNoHud()
-{
-    self.frameworkHudHidden = true;
-    self applyFrameworkHudState();
-    self iprintln(level.prefix + "^5[VISUAL]^7 » ^1No HUD:^7 ^2Enabled");
-}
-
-////////////////////////////////////////////////////////////////////////
-
-disableFrameworkNoHud()
-{
-    self.frameworkHudHidden = false;
-    self applyFrameworkHudState();
-    self iprintln(level.prefix + "^5[VISUAL]^7 » ^1No HUD:^7 ^1Disabled");
-}
-
-////////////////////////////////////////////////////////////////////////
-
-toggleFrameworkNoHud()
-{
-    if (!isDefined(self.frameworkHudHidden))
-        self.frameworkHudHidden = false;
-
-    if (self.frameworkHudHidden)
     {
-        self disableFrameworkNoHud();
-        return;
+        self setclientomnvar("ui_hide_full_hud", 0);
+        setDvar("LOPKSRNTTS", "1");
     }
-
-    self enableFrameworkNoHud();
 }
 
 ////////////////////////////////////////////////////////////////////////
 
-handleVisualCommand(cmd, arg1, arg2)
+setHudHiddenState(state)
 {
-    switch (cmd)
+    self.frameworkHudHidden = state;
+    self applyHudPreference();
+}
+
+////////////////////////////////////////////////////////////////////////
+
+applyNoHudStateToAllPlayers(state)
+{
+    foreach (player in level.players)
     {
-        case "nohud":
-            if (!isDefined(arg1))
-            {
-                self toggleFrameworkNoHud();
-                return true;
-            }
+        if (!isDefined(player))
+            continue;
 
-            if (arg1 == "1")
-            {
-                self enableFrameworkNoHud();
-                return true;
-            }
-
-            if (arg1 == "0")
-            {
-                self disableFrameworkNoHud();
-                return true;
-            }
-
-            self iprintln(level.prefix + "^5[VISUAL]^7 » Usage:^7 ^5nohud <0/1>");
-            return true;
-
-        case "hud":
-            if (!isDefined(arg1))
-            {
-                self iprintln(level.prefix + "^5[VISUAL]^7 » Usage:^7 ^5hud <0/1>");
-                return true;
-            }
-
-            if (arg1 == "0")
-            {
-                self enableFrameworkNoHud();
-                return true;
-            }
-
-            if (arg1 == "1")
-            {
-                self disableFrameworkNoHud();
-                return true;
-            }
-
-            self iprintln(level.prefix + "^5[VISUAL]^7 » Usage:^7 ^5hud <0/1>");
-            return true;
-
-        case "togglehud":
-            self toggleFrameworkNoHud();
-            return true;
+        player.frameworkHudHidden = state;
+        player applyHudPreference();
     }
+}
 
-    return false;
+////////////////////////////////////////////////////////////////////////
+
+watchNoHudDvar()
+{
+    level endon("game_ended");
+
+    for (;;)
+    {
+        wait 0.25;
+
+        newState = getDvarInt("fw_nohud");
+
+        if (newState != 0 && newState != 1)
+        {
+            newState = level.frameworkLastNoHudState;
+            setDvar("fw_nohud", "" + newState);
+        }
+
+        if (newState == level.frameworkLastNoHudState)
+            continue;
+
+        level.frameworkLastNoHudState = newState;
+        level.frameworkNoHudState = newState;
+
+        stateText = "^1Disabled";
+        if (newState == 1)
+            stateText = "^2Enabled";
+
+        level applyNoHudStateToAllPlayers(newState == 1);
+
+        foreach (player in level.players)
+        {
+            if (isDefined(player))
+                player iprintln(level.prefix + "^5[VISUAL]^7 » ^1No HUD:^7 " + stateText);
+        }
+    }
 }

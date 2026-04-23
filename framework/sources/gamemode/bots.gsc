@@ -6,19 +6,38 @@
 
 ////////////////////////////////////////////////////////////////////////
 
-// Framework-owned bot systems
+// Framework bot systems
 //
-// Rebuilt features:
-// - addbot
-// - kickbot
-// - setbotdifficulty
+// DVARs:
+// - fw_addbot
+// - fw_kickbot
+// - fw_bot_team
+// - fw_bot_difficulty
 
 init()
 {
     level endon("game_ended");
 
-    if (!isDefined(level.frameworkBotsReady))
-        level.frameworkBotsReady = true;
+    if (getDvarInt("fw_addbot") < 0)
+        setDvar("fw_addbot", "0");
+
+    if (getDvarInt("fw_kickbot") < 0)
+        setDvar("fw_kickbot", "0");
+
+    if (getDvar("fw_bot_team") == "")
+        setDvar("fw_bot_team", "autoassign");
+
+    if (getDvar("fw_bot_difficulty") == "")
+        setDvar("fw_bot_difficulty", "regular");
+
+    // Always start request counters from 0 so queued console values work
+    level.frameworkLastAddBot = 0;
+    level.frameworkLastKickBot = 0;
+
+    level.frameworkLastBotTeam = "";
+    level.frameworkLastBotDifficulty = "";
+
+    level thread watchBotDvars();
 }
 
 ////////////////////////////////////////////////////////////////////////
@@ -30,7 +49,7 @@ onPlayerConnected()
 
 ////////////////////////////////////////////////////////////////////////
 
-resolveBotTeam(rawValue, player)
+resolveBotTeam(rawValue)
 {
     if (!isDefined(rawValue) || rawValue == "")
         return "autoassign";
@@ -40,39 +59,13 @@ resolveBotTeam(rawValue, player)
     if (value == "auto" || value == "autoassign" || value == "random")
         return "autoassign";
 
-    if (value == "allies" || value == "ally" || value == "same")
-    {
-        if (isDefined(player) && isDefined(player.team))
-            return player.team;
-
+    if (value == "allies" || value == "ally")
         return "allies";
-    }
 
-    if (value == "axis" || value == "enemy" || value == "opposite")
-    {
-        if (isDefined(player) && isDefined(player.team))
-        {
-            if (player.team == "allies")
-                return "axis";
-
-            if (player.team == "axis")
-                return "allies";
-        }
-
+    if (value == "axis" || value == "enemy")
         return "axis";
-    }
 
     return "autoassign";
-}
-
-////////////////////////////////////////////////////////////////////////
-
-getBotTeamLabel(teamValue)
-{
-    if (!isDefined(teamValue) || teamValue == "autoassign")
-        return "Autoassign";
-
-    return teamValue;
 }
 
 ////////////////////////////////////////////////////////////////////////
@@ -80,7 +73,7 @@ getBotTeamLabel(teamValue)
 resolveBotDifficulty(rawValue)
 {
     if (!isDefined(rawValue) || rawValue == "")
-        return undefined;
+        return "regular";
 
     value = toLower(rawValue);
 
@@ -96,7 +89,17 @@ resolveBotDifficulty(rawValue)
     if (value == "4" || value == "vet" || value == "veteran")
         return "veteran";
 
-    return undefined;
+    return "regular";
+}
+
+////////////////////////////////////////////////////////////////////////
+
+getBotTeamLabel(teamValue)
+{
+    if (!isDefined(teamValue) || teamValue == "autoassign")
+        return "Autoassign";
+
+    return teamValue;
 }
 
 ////////////////////////////////////////////////////////////////////////
@@ -142,99 +145,75 @@ removeFrameworkBots(amount, teamValue)
 
 ////////////////////////////////////////////////////////////////////////
 
-applyFrameworkBotDifficulty(teamValue, difficultyValue)
+broadcastBotMessage(text)
 {
-    changed = 0;
-
-    if (!isDefined(difficultyValue))
-        return 0;
-
     foreach (player in level.players)
     {
-        if (!isbot(player))
-            continue;
-
-        if (teamValue != "autoassign" && player.team != teamValue)
-            continue;
-
-        player scripts\mp\bots\bots_util::bot_set_difficulty(difficultyValue);
-        player.pers["botDifficulty"] = difficultyValue;
-        changed++;
+        if (isDefined(player))
+            player iprintln(level.prefix + "^5[BOTS]^7 » " + text);
     }
-
-    return changed;
 }
 
 ////////////////////////////////////////////////////////////////////////
 
-handleAddBotCommand(arg1, arg2)
+watchBotDvars()
 {
-    count = 1;
-    if (isDefined(arg1) && arg1 != "")
-        count = int(arg1);
+    level endon("game_ended");
 
-    teamValue = resolveBotTeam(arg2, self);
-    difficultyValue = resolveBotDifficulty(getDvarString("bot_difficulty"));
-
-    self spawnFrameworkBots(count, teamValue, difficultyValue);
-
-    message = level.prefix + "^5[BOTS]^7 » ^2Spawned:^7 " + count + " ^2bot(s)^7 • ^2Team:^7 " + getBotTeamLabel(teamValue);
-    if (isDefined(difficultyValue))
-        message += " ^7• ^2Difficulty:^7 " + difficultyValue;
-
-    self iprintln(message);
-}
-
-////////////////////////////////////////////////////////////////////////
-
-handleKickBotCommand(arg1, arg2)
-{
-    count = 1;
-    if (isDefined(arg1) && arg1 != "")
-        count = int(arg1);
-
-    teamValue = resolveBotTeam(arg2, self);
-    removed = self removeFrameworkBots(count, teamValue);
-
-    self iprintln(level.prefix + "^5[BOTS]^7 » ^1Kicked:^7 " + removed + " ^1bot(s)");
-}
-
-////////////////////////////////////////////////////////////////////////
-
-handleBotDifficultyCommand(arg1, arg2)
-{
-    difficultyValue = resolveBotDifficulty(arg1);
-
-    if (!isDefined(difficultyValue))
+    for (;;)
     {
-        self iprintln(level.prefix + "^5[BOTS]^7 » Usage:^7 ^5setbotdifficulty <recruit/regular/hardened/veteran>");
-        return;
+        wait 0.25;
+
+        addCount = getDvarInt("fw_addbot");
+        kickCount = getDvarInt("fw_kickbot");
+        teamRaw = getDvar("fw_bot_team");
+        difficultyRaw = getDvar("fw_bot_difficulty");
+
+        if (addCount < 0)
+        {
+            addCount = 0;
+            setDvar("fw_addbot", "0");
+        }
+
+        if (kickCount < 0)
+        {
+            kickCount = 0;
+            setDvar("fw_kickbot", "0");
+        }
+
+        teamValue = resolveBotTeam(teamRaw);
+        difficultyValue = resolveBotDifficulty(difficultyRaw);
+
+        if (teamValue != level.frameworkLastBotTeam)
+        {
+            level.frameworkLastBotTeam = teamValue;
+            setDvar("fw_bot_team", teamValue);
+            level broadcastBotMessage("^2Team:^7 " + getBotTeamLabel(teamValue));
+        }
+
+        if (difficultyValue != level.frameworkLastBotDifficulty)
+        {
+            level.frameworkLastBotDifficulty = difficultyValue;
+            setDvar("fw_bot_difficulty", difficultyValue);
+            level broadcastBotMessage("^2Difficulty:^7 " + difficultyValue);
+        }
+
+        if (addCount > 0)
+        {
+            level spawnFrameworkBots(addCount, teamValue, difficultyValue);
+            level broadcastBotMessage("^2Spawned:^7 " + addCount + " ^2bot(s)^7 • ^2Team:^7 " + getBotTeamLabel(teamValue) + " ^7• ^2Difficulty:^7 " + difficultyValue);
+
+            setDvar("fw_addbot", "0");
+            level.frameworkLastAddBot = 0;
+        }
+
+        if (kickCount > 0)
+        {
+            removed = level removeFrameworkBots(kickCount, teamValue);
+            level broadcastBotMessage("^1Kicked:^7 " + removed + " ^1bot(s)");
+
+            setDvar("fw_kickbot", "0");
+            level.frameworkLastKickBot = 0;
+        }
     }
-
-    teamValue = resolveBotTeam(arg2, self);
-    changed = self applyFrameworkBotDifficulty(teamValue, difficultyValue);
-
-    self iprintln(level.prefix + "^5[BOTS]^7 » ^2Difficulty:^7 " + difficultyValue + " ^2applied to:^7 " + changed + " ^2bot(s)");
-}
-
-////////////////////////////////////////////////////////////////////////
-
-handleBotCommand(cmd, arg1, arg2)
-{
-    switch (cmd)
-    {
-        case "addbot":
-            self handleAddBotCommand(arg1, arg2);
-            return true;
-
-        case "kickbot":
-            self handleKickBotCommand(arg1, arg2);
-            return true;
-
-        case "setbotdifficulty":
-            self handleBotDifficultyCommand(arg1, arg2);
-            return true;
-    }
-
-    return false;
 }
