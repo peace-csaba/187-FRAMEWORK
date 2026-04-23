@@ -237,47 +237,6 @@ getFrameworkBotTeamLabel(teamValue)
 
 ////////////////////////////////////////////////////////////////////////
 
-spawnFrameworkBots(amount, teamValue, difficultyValue)
-{
-    if (!isDefined(amount) || amount < 1)
-        amount = 1;
-
-    if (amount > 64)
-        amount = 64;
-
-    scripts\mp\bots\bots::spawn_bots(amount, teamValue, undefined, undefined, undefined, difficultyValue);
-}
-
-////////////////////////////////////////////////////////////////////////
-
-removeFrameworkBots(amount, teamValue)
-{
-    removed = 0;
-
-    if (!isDefined(amount) || amount < 1)
-        amount = 1;
-
-    foreach (player in level.players)
-    {
-        if (removed >= amount)
-            break;
-
-        if (!isbot(player))
-            continue;
-
-        if (teamValue != "autoassign" && player.team != teamValue)
-            continue;
-
-        kick(player getentitynumber(), "EXE/PLAYERKICKED");
-        removed++;
-        wait 0.10;
-    }
-
-    return removed;
-}
-
-////////////////////////////////////////////////////////////////////////
-
 broadcastFrameworkBotMessage(text)
 {
     foreach (player in level.players)
@@ -333,7 +292,7 @@ watchBotDvars()
 
         if (addCount > 0)
         {
-            level spawnFrameworkBots(addCount, teamValue, difficultyValue);
+            level custom_scripts\framework\sources\core\engine::spawnBotsSafe(addCount, teamValue, difficultyValue);
             level broadcastFrameworkBotMessage("^2Spawned:^7 " + addCount + " ^2bot(s)^7 • ^2Team:^7 " + getFrameworkBotTeamLabel(teamValue) + " ^7• ^2Difficulty:^7 " + difficultyValue);
 
             setDvar("fw_addbot", "0");
@@ -342,7 +301,7 @@ watchBotDvars()
 
         if (kickCount > 0)
         {
-            removed = level removeFrameworkBots(kickCount, teamValue);
+            removed = level custom_scripts\framework\sources\core\engine::removeBotsSafe(kickCount, teamValue);
             level broadcastFrameworkBotMessage("^1Kicked:^7 " + removed + " ^1bot(s)");
 
             setDvar("fw_kickbot", "0");
@@ -558,7 +517,7 @@ frameworkInfiniteAmmoLoop()
     self endon("stop_framework_infinite_ammo");
     level endon("game_ended");
 
-    self frameworkRefillAllAmmo();
+    self custom_scripts\framework\sources\core\engine::refillAllAmmoSafe();
 
     for (;;)
     {
@@ -568,41 +527,8 @@ frameworkInfiniteAmmoLoop()
             self, "force_regeneration"
         );
 
-        self frameworkRefillAllAmmo();
+        self custom_scripts\framework\sources\core\engine::refillAllAmmoSafe();
     }
-}
-
-////////////////////////////////////////////////////////////////////////
-
-frameworkRefillAllAmmo()
-{
-    weapons = self.equippedweapons;
-
-    foreach (weapon in weapons)
-    {
-        if (!isDefined(weapon))
-            continue;
-
-        self frameworkRefillWeaponAmmo(weapon);
-    }
-}
-
-////////////////////////////////////////////////////////////////////////
-
-frameworkRefillWeaponAmmo(weapon)
-{
-    if (!isDefined(weapon))
-        return;
-
-    self givemaxammo(weapon);
-    self setweaponammostock(weapon, 999);
-    self setweaponammoclip(weapon, 999);
-    self setweaponammoclip(weapon, 999, "left");
-    self setweaponammoclip(weapon, 999, "_encstr_A5AD056A019C63");
-    self setweaponammoclip(weapon, 999, "_encstr_B1AD05C65666E8");
-    self setweaponammoclip(weapon, 999, "right");
-    self setweaponammoclip(weapon, 999, "_encstr_8253060E2B5FE330");
-    self setweaponammoclip(weapon, 999, "_encstr_9353062E718710C9");
 }
 
 ////////////////////////////////////////////////////////////////////////
@@ -645,8 +571,7 @@ watchFrameworkNoRecoilDvar()
             }
             else
             {
-                self player_recoilscaleoff();
-                self.recoilscale = undefined;
+                self custom_scripts\framework\sources\core\engine::disableNoRecoilSafe();
                 self iprintln(level.prefix + "^5[COMBAT]^7 » ^2No Recoil:^7 ^1Disabled");
             }
         }
@@ -666,8 +591,7 @@ frameworkNoRecoilLoop()
 
     for (;;)
     {
-        self.recoilscale = 100;
-        self player_recoilscaleon(0);
+        self custom_scripts\framework\sources\core\engine::enableNoRecoilSafe();
         wait 0.05;
     }
 }
