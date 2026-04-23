@@ -6,11 +6,13 @@
 
 ////////////////////////////////////////////////////////////////////////
 
+// Framework-owned movement systems
+//
+// Clean-room scaffold for future rebuild.
+
 init()
 {
     level endon("game_ended");
-
-    level.frameworkMovementEnabled = true;
 }
 
 ////////////////////////////////////////////////////////////////////////
@@ -24,13 +26,13 @@ onPlayerConnected()
         self waittill("spawned_player");
 
         self notify("stop_framework_movement_spawn");
-        self thread handleMovementSpawn();
+        self thread frameworkMovementSpawn();
     }
 }
 
 ////////////////////////////////////////////////////////////////////////
 
-handleMovementSpawn()
+frameworkMovementSpawn()
 {
     self endon("disconnect");
     self endon("death");

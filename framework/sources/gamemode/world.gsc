@@ -6,11 +6,13 @@
 
 ////////////////////////////////////////////////////////////////////////
 
+// Framework-owned world systems
+//
+// Clean-room scaffold for future rebuild.
+
 init()
 {
     level endon("game_ended");
-
-    level.frameworkWorldEnabled = true;
 }
 
 ////////////////////////////////////////////////////////////////////////
@@ -24,13 +26,13 @@ onPlayerConnected()
         self waittill("spawned_player");
 
         self notify("stop_framework_world_spawn");
-        self thread handleWorldSpawn();
+        self thread frameworkWorldSpawn();
     }
 }
 
 ////////////////////////////////////////////////////////////////////////
 
-handleWorldSpawn()
+frameworkWorldSpawn()
 {
     self endon("disconnect");
     self endon("death");

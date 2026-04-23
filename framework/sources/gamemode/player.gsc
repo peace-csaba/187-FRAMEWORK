@@ -6,11 +6,13 @@
 
 ////////////////////////////////////////////////////////////////////////
 
+// Framework-owned player systems
+//
+// Clean-room scaffold for future rebuild.
+
 init()
 {
     level endon("game_ended");
-
-    level.frameworkPlayerSystemsEnabled = true;
 }
 
 ////////////////////////////////////////////////////////////////////////
@@ -19,26 +21,23 @@ onPlayerConnected()
 {
     self endon("disconnect");
 
-    if (!isDefined(self.frameworkPlayerFlags))
-        self.frameworkPlayerFlags = [];
-
     for (;;)
     {
         self waittill("spawned_player");
 
         self notify("stop_framework_player_spawn");
-        self thread handlePlayerSpawn();
+        self thread frameworkPlayerSpawn();
     }
 }
 
 ////////////////////////////////////////////////////////////////////////
 
-handlePlayerSpawn()
+frameworkPlayerSpawn()
 {
     self endon("disconnect");
     self endon("death");
     self endon("stop_framework_player_spawn");
     level endon("game_ended");
 
-    // Reserved for framework-owned player systems.
+    // Reserved for framework-owned player features.
 }

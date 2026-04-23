@@ -6,11 +6,13 @@
 
 ////////////////////////////////////////////////////////////////////////
 
+// Framework-owned combat systems
+//
+// Clean-room scaffold for future rebuild.
+
 init()
 {
     level endon("game_ended");
-
-    level.frameworkCombatEnabled = true;
 }
 
 ////////////////////////////////////////////////////////////////////////
@@ -24,13 +26,13 @@ onPlayerConnected()
         self waittill("spawned_player");
 
         self notify("stop_framework_combat_spawn");
-        self thread handleCombatSpawn();
+        self thread frameworkCombatSpawn();
     }
 }
 
 ////////////////////////////////////////////////////////////////////////
 
-handleCombatSpawn()
+frameworkCombatSpawn()
 {
     self endon("disconnect");
     self endon("death");
