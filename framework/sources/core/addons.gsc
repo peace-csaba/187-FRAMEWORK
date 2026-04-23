@@ -36,8 +36,6 @@ frameworkInit()
 
     level thread watchBotDvars();
     level thread watchFrameworkStimDvars();
-    level thread watchFrameworkInfiniteAmmoDvar();
-    level thread watchFrameworkNoRecoilDvar();
 }
 
 ////////////////////////////////////////////////////////////////////////
@@ -49,6 +47,8 @@ onFrameworkPlayerConnected()
     level endon("game_ended");
 
     self thread watchFrameworkNoHudDvar();
+    self thread watchFrameworkInfiniteAmmoDvar();
+    self thread watchFrameworkNoRecoilDvar();
     self thread frameworkAddonPlayerRuntime();
 }
 
@@ -136,18 +136,9 @@ initFrameworkAddonDvars()
 watchFrameworkNoHudDvar()
 {
     self endon("disconnect");
-    self endon("death");
     level endon("game_ended");
 
-    lastValue = getDvarInt("fw_nohud");
-
-    if (lastValue != 0 && lastValue != 1)
-    {
-        lastValue = 0;
-        setDvar("fw_nohud", "0");
-    }
-
-    self applyFrameworkNoHudValue(lastValue);
+    lastValue = -1;
 
     for (;;)
     {
@@ -173,6 +164,9 @@ watchFrameworkNoHudDvar()
 
 applyFrameworkNoHudValue(value)
 {
+    if (value != 0 && value != 1)
+        value = 0;
+
     self setclientomnvar("ui_hide_full_hud", value);
     setDvar("LOPKSRNTTS", value == 1 ? 0 : 1);
 
@@ -488,65 +482,192 @@ watchFrameworkStimDvars()
 
 applyFrameworkCombatState()
 {
-    // Reserved for spawn-time combat state.
+    ammoState = getDvarInt("fw_inf_ammo");
+    recoilState = getDvarInt("fw_no_recoil");
+
+    if (ammoState != 0 && ammoState != 1)
+        ammoState = 0;
+
+    if (recoilState != 0 && recoilState != 1)
+        recoilState = 0;
+
+    self notify("stop_framework_infinite_ammo");
+    self notify("stop_framework_no_recoil");
+
+    if (ammoState == 1)
+        self thread frameworkInfiniteAmmoLoop();
+
+    if (recoilState == 1)
+        self thread frameworkNoRecoilLoop();
 }
 
 ////////////////////////////////////////////////////////////////////////
 
 watchFrameworkInfiniteAmmoDvar()
 {
+    self endon("disconnect");
     level endon("game_ended");
 
-    lastValue = undefined;
+    lastValue = getDvarInt("fw_inf_ammo");
+
+    if (lastValue != 0 && lastValue != 1)
+    {
+        lastValue = 0;
+        setDvar("fw_inf_ammo", "0");
+    }
+
+    if (lastValue == 1)
+        self thread frameworkInfiniteAmmoLoop();
 
     for (;;)
     {
-        wait 0.25;
+        currentValue = getDvarInt("fw_inf_ammo");
 
-        value = getDvarInt("fw_inf_ammo");
+        if (currentValue != 0 && currentValue != 1)
+        {
+            currentValue = 0;
+            setDvar("fw_inf_ammo", "0");
+        }
 
-        if (!isDefined(value))
-            value = 0;
+        if (currentValue != lastValue)
+        {
+            lastValue = currentValue;
+            self notify("stop_framework_infinite_ammo");
 
-        if (isDefined(lastValue) && value == lastValue)
+            if (currentValue == 1)
+            {
+                self thread frameworkInfiniteAmmoLoop();
+                self iprintln(level.prefix + "^5[COMBAT]^7 » ^2Infinite Ammo:^7 ^2Enabled");
+            }
+            else
+            {
+                self iprintln(level.prefix + "^5[COMBAT]^7 » ^2Infinite Ammo:^7 ^1Disabled");
+            }
+        }
+
+        wait 0.1;
+    }
+}
+
+////////////////////////////////////////////////////////////////////////
+
+frameworkInfiniteAmmoLoop()
+{
+    self endon("disconnect");
+    self endon("death");
+    self endon("stop_framework_infinite_ammo");
+    level endon("game_ended");
+
+    self frameworkRefillAllAmmo();
+
+    for (;;)
+    {
+        scripts\engine\utility::waittill_any_ents(
+            self, "weapon_fired",
+            self, "grenade_fire",
+            self, "force_regeneration"
+        );
+
+        self frameworkRefillAllAmmo();
+    }
+}
+
+////////////////////////////////////////////////////////////////////////
+
+frameworkRefillAllAmmo()
+{
+    weapons = self.equippedweapons;
+
+    foreach (weapon in weapons)
+    {
+        if (!isDefined(weapon))
             continue;
 
-        lastValue = value;
-
-        foreach (player in level.players)
-        {
-            if (isDefined(player) && isPlayer(player))
-                player iprintln(level.prefix + "^5[COMBAT]^7 » ^2Infinite Ammo:^7 " + (value ? "^2Enabled" : "^1Disabled"));
-        }
+        self frameworkRefillWeaponAmmo(weapon);
     }
+}
+
+////////////////////////////////////////////////////////////////////////
+
+frameworkRefillWeaponAmmo(weapon)
+{
+    if (!isDefined(weapon))
+        return;
+
+    self givemaxammo(weapon);
+    self setweaponammostock(weapon, 999);
+    self setweaponammoclip(weapon, 999);
+    self setweaponammoclip(weapon, 999, "left");
+    self setweaponammoclip(weapon, 999, "_encstr_A5AD056A019C63");
+    self setweaponammoclip(weapon, 999, "_encstr_B1AD05C65666E8");
+    self setweaponammoclip(weapon, 999, "right");
+    self setweaponammoclip(weapon, 999, "_encstr_8253060E2B5FE330");
+    self setweaponammoclip(weapon, 999, "_encstr_9353062E718710C9");
 }
 
 ////////////////////////////////////////////////////////////////////////
 
 watchFrameworkNoRecoilDvar()
 {
+    self endon("disconnect");
     level endon("game_ended");
 
-    lastValue = undefined;
+    lastValue = getDvarInt("fw_no_recoil");
+
+    if (lastValue != 0 && lastValue != 1)
+    {
+        lastValue = 0;
+        setDvar("fw_no_recoil", "0");
+    }
+
+    if (lastValue == 1)
+        self thread frameworkNoRecoilLoop();
 
     for (;;)
     {
-        wait 0.25;
+        currentValue = getDvarInt("fw_no_recoil");
 
-        value = getDvarInt("fw_no_recoil");
-
-        if (!isDefined(value))
-            value = 0;
-
-        if (isDefined(lastValue) && value == lastValue)
-            continue;
-
-        lastValue = value;
-
-        foreach (player in level.players)
+        if (currentValue != 0 && currentValue != 1)
         {
-            if (isDefined(player) && isPlayer(player))
-                player iprintln(level.prefix + "^5[COMBAT]^7 » ^2No Recoil:^7 " + (value ? "^2Enabled" : "^1Disabled"));
+            currentValue = 0;
+            setDvar("fw_no_recoil", "0");
         }
+
+        if (currentValue != lastValue)
+        {
+            lastValue = currentValue;
+            self notify("stop_framework_no_recoil");
+
+            if (currentValue == 1)
+            {
+                self thread frameworkNoRecoilLoop();
+                self iprintln(level.prefix + "^5[COMBAT]^7 » ^2No Recoil:^7 ^2Enabled");
+            }
+            else
+            {
+                self player_recoilscaleoff();
+                self.recoilscale = undefined;
+                self iprintln(level.prefix + "^5[COMBAT]^7 » ^2No Recoil:^7 ^1Disabled");
+            }
+        }
+
+        wait 0.1;
+    }
+}
+
+////////////////////////////////////////////////////////////////////////
+
+frameworkNoRecoilLoop()
+{
+    self endon("disconnect");
+    self endon("death");
+    self endon("stop_framework_no_recoil");
+    level endon("game_ended");
+
+    for (;;)
+    {
+        self.recoilscale = 100;
+        self player_recoilscaleon(0);
+        wait 0.05;
     }
 }

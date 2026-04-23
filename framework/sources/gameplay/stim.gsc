@@ -195,24 +195,14 @@ runStimBoost(refreshed)
         decay = level.frameworkStimDecay;
 
     // Safe fallback defaults
-    if (!isDefined(base) || base <= 0)
+    if (!isDefined(base) || base < 1.0)
         base = 1.05;
 
-    if (!isDefined(duration) || duration <= 0)
+    if (!isDefined(duration) || duration < 1)
         duration = 10;
 
     if (!isDefined(decay) || decay < 0)
         decay = 0.1;
-
-    // Final clamps
-    if (base < 1.0)
-        base = 1.0;
-
-    if (duration < 1)
-        duration = 1;
-
-    if (decay < 0)
-        decay = 0;
 
     speed = base;
     finishedNormally = false;
