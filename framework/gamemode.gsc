@@ -21,12 +21,10 @@ frameworkInit()
 
     initFrameworkGamemodeDvars();
 
-    level thread custom_scripts\framework\sources\gamemode\bots::init();
+    // Only start modules that currently exist and are in use
     level thread custom_scripts\framework\sources\gamemode\visual::init();
-    level thread custom_scripts\framework\sources\gamemode\movement::init();
+    level thread custom_scripts\framework\sources\gamemode\bots::init();
     level thread custom_scripts\framework\sources\gamemode\combat::init();
-    level thread custom_scripts\framework\sources\gamemode\world::init();
-    level thread custom_scripts\framework\sources\gamemode\player::init();
 }
 
 ////////////////////////////////////////////////////////////////////////
@@ -36,34 +34,13 @@ onFrameworkPlayerConnected()
     self endon("disconnect");
     level endon("game_ended");
 
-    self thread frameworkPlayerRuntime();
-}
+    if (!isbot(self))
+        self custom_scripts\framework\sources\core\shared::frameworkPrint("^5[187]^7 » ^2Gamemode Systems Loaded");
 
-////////////////////////////////////////////////////////////////////////
-
-frameworkPlayerRuntime()
-{
-    self endon("disconnect");
-    level endon("game_ended");
-
-    self custom_scripts\framework\sources\core\shared::frameworkPrint("^5[187]^7 » ^2Gamemode Systems Loaded");
-
-    for (;;)
-    {
-        self waittill("spawned_player");
-
-        if (isbot(self))
-            return;
-
-        self notify("stop_framework_gamemode_runtime");
-
-        self thread custom_scripts\framework\sources\gamemode\movement::onPlayerSpawned();
-        self thread custom_scripts\framework\sources\gamemode\combat::onPlayerSpawned();
-        self thread custom_scripts\framework\sources\gamemode\visual::onPlayerSpawned();
-        self thread custom_scripts\framework\sources\gamemode\world::onPlayerSpawned();
-        self thread custom_scripts\framework\sources\gamemode\player::onPlayerSpawned();
-        self thread custom_scripts\framework\sources\gamemode\bots::onPlayerSpawned();
-    }
+    // Route directly to per-module player handlers
+    self thread custom_scripts\framework\sources\gamemode\visual::onPlayerConnected();
+    self thread custom_scripts\framework\sources\gamemode\bots::onPlayerConnected();
+    self thread custom_scripts\framework\sources\gamemode\combat::onPlayerConnected();
 }
 
 ////////////////////////////////////////////////////////////////////////
@@ -76,12 +53,27 @@ initFrameworkGamemodeDvars()
 
     level.frameworkGamemodeDvarsReady = true;
 
-    // Visual
-    setDvarIfUninitialized("fw_nohud", 0);
+    // VISUAL
+    frameworkEnsureGamemodeDvar("fw_nohud", "0");
 
-    // Bots
-    setDvarIfUninitialized("fw_addbot", 0);
-    setDvarIfUninitialized("fw_kickbot", 0);
-    setDvarIfUninitialized("fw_bot_team", "autoassign");
-    setDvarIfUninitialized("fw_bot_difficulty", "mixed");
+    // BOTS
+    frameworkEnsureGamemodeDvar("fw_addbot", "0");
+    frameworkEnsureGamemodeDvar("fw_kickbot", "0");
+    frameworkEnsureGamemodeDvar("fw_bot_team", "autoassign");
+    frameworkEnsureGamemodeDvar("fw_bot_difficulty", "mixed");
+
+    // COMBAT
+    frameworkEnsureGamemodeDvar("fw_inf_ammo", "0");
+    frameworkEnsureGamemodeDvar("fw_no_recoil", "0");
+}
+
+////////////////////////////////////////////////////////////////////////
+
+// Safe fallback instead of relying on setDvarIfUninitialized
+frameworkEnsureGamemodeDvar(name, value)
+{
+    current = getDvar(name);
+
+    if (!isDefined(current) || current == "")
+        setDvar(name, value);
 }
