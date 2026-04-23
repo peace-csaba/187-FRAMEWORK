@@ -10,7 +10,6 @@ This project is designed as a long-term base for future gameplay systems, balanc
 
 ## Current Release
 
-<<<<<<< HEAD
 ### Clean Gamemode Scaffold — v1.3  
 **The Medical Nose Update**
 
