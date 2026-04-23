@@ -90,188 +90,59 @@ customprint(text)
 
 ////////////////////////////////////////////////////////////////////////
 
-frameworkBroadcastSettingChange(label, value, color)
+// Generic framework broadcast helper
+frameworkBroadcastMessage(text)
 {
     foreach (player in level.players)
     {
         if (isDefined(player))
-            player iprintln(level.prefix + "^1[DVAR]^7 » " + color + label + ":^7 " + color + value + " ^7(updated)");
+            player iprintln(text);
     }
 }
 
 ////////////////////////////////////////////////////////////////////////
 
-// =========================
-// FRAMEWORK STIM DVARS
-// =========================
-//
-// DVARs:
-// - fw_stim_boost_speed
-// - fw_stim_boost_duration
-// - fw_stim_boost_decay
-
-frameworkEnsureStimDvars()
+// Generic DVAR change broadcast helper
+frameworkBroadcastSettingChange(label, value, color)
 {
-    speed = getDvarFloat("fw_stim_boost_speed");
-    duration = getDvarInt("fw_stim_boost_duration");
-    decay = getDvarFloat("fw_stim_boost_decay");
-
-    if (!isDefined(speed) || speed <= 0)
-    {
-        speed = 1.05;
-        setDvar("fw_stim_boost_speed", "" + speed);
-    }
-
-    if (!isDefined(duration) || duration <= 0)
-    {
-        duration = 10;
-        setDvar("fw_stim_boost_duration", "" + duration);
-    }
-
-    if (!isDefined(decay) || decay < 0)
-    {
-        decay = 0.1;
-        setDvar("fw_stim_boost_decay", "" + decay);
-    }
-
-    level.frameworkStimSpeed = speed;
-    level.frameworkStimDuration = duration;
-    level.frameworkStimDecay = decay;
+    level frameworkBroadcastMessage(level.prefix + "^1[DVAR]^7 » " + color + label + ":^7 " + color + value + " ^7(updated)");
 }
 
 ////////////////////////////////////////////////////////////////////////
 
-frameworkCacheStimDvars()
+// Safe float DVAR helper
+getFrameworkFloatDvar(name, fallback)
 {
-    level.cachedStimSpeed = level.frameworkStimSpeed;
-    level.cachedStimDuration = level.frameworkStimDuration;
-    level.cachedStimDecay = level.frameworkStimDecay;
+    value = getDvarFloat(name);
+
+    if (!isDefined(value))
+        return fallback;
+
+    return value;
 }
 
 ////////////////////////////////////////////////////////////////////////
 
-frameworkCheckStimDvarChanges()
+// Safe int DVAR helper
+getFrameworkIntDvar(name, fallback)
 {
-    speed = getDvarFloat("fw_stim_boost_speed");
-    duration = getDvarInt("fw_stim_boost_duration");
-    decay = getDvarFloat("fw_stim_boost_decay");
+    value = getDvarInt(name);
 
-    if (!isDefined(speed) || speed <= 0)
-        speed = level.cachedStimSpeed;
+    if (!isDefined(value))
+        return fallback;
 
-    if (!isDefined(duration) || duration <= 0)
-        duration = level.cachedStimDuration;
-
-    if (!isDefined(decay) || decay < 0)
-        decay = level.cachedStimDecay;
-
-    if (speed != level.cachedStimSpeed)
-    {
-        level.cachedStimSpeed = speed;
-        frameworkBroadcastSettingChange("Stim Speed", speed, "^2");
-    }
-
-    if (duration != level.cachedStimDuration)
-    {
-        level.cachedStimDuration = duration;
-        frameworkBroadcastSettingChange("Stim Duration", duration, "^3");
-    }
-
-    if (decay != level.cachedStimDecay)
-    {
-        level.cachedStimDecay = decay;
-        frameworkBroadcastSettingChange("Stim Decay", decay, "^1");
-    }
-
-    level.frameworkStimSpeed = speed;
-    level.frameworkStimDuration = duration;
-    level.frameworkStimDecay = decay;
+    return value;
 }
 
 ////////////////////////////////////////////////////////////////////////
 
-frameworkEnforceStimDvars()
+// Safe string DVAR helper
+getFrameworkStringDvar(name, fallback)
 {
-    if (getDvarFloat("fw_stim_boost_speed") != level.frameworkStimSpeed)
-        setDvar("fw_stim_boost_speed", "" + level.frameworkStimSpeed);
+    value = getDvar(name);
 
-    if (getDvarInt("fw_stim_boost_duration") != level.frameworkStimDuration)
-        setDvar("fw_stim_boost_duration", "" + level.frameworkStimDuration);
+    if (!isDefined(value) || value == "")
+        return fallback;
 
-    if (getDvarFloat("fw_stim_boost_decay") != level.frameworkStimDecay)
-        setDvar("fw_stim_boost_decay", "" + level.frameworkStimDecay);
-}
-
-////////////////////////////////////////////////////////////////////////
-
-// DVAR sync / protection
-//
-// Handles:
-// - fw_stim_boost_speed
-// - fw_stim_boost_duration
-// - fw_stim_boost_decay
-//
-// This is the ONLY place that prints global update messages.
-initDvarsProtection()
-{
-    level endon("game_ended");
-
-    frameworkEnsureStimDvars();
-    frameworkCacheStimDvars();
-
-    for (;;)
-    {
-        wait 1;
-        frameworkCheckStimDvarChanges();
-        frameworkEnforceStimDvars();
-    }
-}
-
-////////////////////////////////////////////////////////////////////////
-
-// Ingame host helper
-//
-// Commands:
-// - fw_stim_boost_speed <float>
-// - fw_stim_boost_duration <int>
-// - fw_stim_boost_decay <float>
-//
-// This only sets DVARs.
-// Global feedback is printed by initDvarsProtection().
-handleFrameworkHostCommand(cmd, arg1)
-{
-    switch (cmd)
-    {
-        case "fw_stim_boost_speed":
-            if (!isDefined(arg1))
-            {
-                self iprintln(level.prefix + "^1[DVAR]^7 » Usage:^7 ^5fw_stim_boost_speed <float>");
-                return true;
-            }
-
-            setDvar("fw_stim_boost_speed", "" + arg1);
-            return true;
-
-        case "fw_stim_boost_duration":
-            if (!isDefined(arg1))
-            {
-                self iprintln(level.prefix + "^1[DVAR]^7 » Usage:^7 ^5fw_stim_boost_duration <int>");
-                return true;
-            }
-
-            setDvar("fw_stim_boost_duration", "" + arg1);
-            return true;
-
-        case "fw_stim_boost_decay":
-            if (!isDefined(arg1))
-            {
-                self iprintln(level.prefix + "^1[DVAR]^7 » Usage:^7 ^5fw_stim_boost_decay <float>");
-                return true;
-            }
-
-            setDvar("fw_stim_boost_decay", "" + arg1);
-            return true;
-    }
-
-    return false;
+    return value;
 }

@@ -10,17 +10,42 @@ This project is designed as a long-term base for future gameplay systems, balanc
 
 ## Current Release
 
-### Clean Gamemode Scaffold — v1.3  
+### Addons Rework — v1.4  
 **The Medical Nose Update**
 
-This release includes a fresh gamemode scaffold under `framework/sources/gamemode/` with the first rebuilt systems for:
+This release focuses on a cleaner framework-owned addon layer and a more consistent DVAR structure.
 
-- visual HUD toggling
-- bot management
-- reworked stim DVAR control
-- modular combat rebuild foundations
+### Included in v1.4
+- reworked addon routing through `framework/sources/core/addons.gsc`
+- cleaned `framework.gsc` bootstrap flow
+- simplified `shared.gsc` into shared-only helpers
+- rebuilt DVAR-controlled HUD toggle
+- rebuilt DVAR-controlled bot management
+- reworked stim boost DVAR ownership
+- cleaned combat addon watcher foundations
+- unified `fw_` naming for addon DVARs
 
-The goal of this version is to keep the public framework clean, modular, and easy to expand.
+The goal of this version is to keep the public framework cleaner, easier to maintain, and easier to expand without falling back into a monolithic project structure.
+
+---
+
+## Project Structure
+
+```text
+custom_scripts/
+├── framework.gsc
+└── framework/
+    └── sources/
+        ├── core/
+        │   ├── addons.gsc
+        │   ├── engine.gsc
+        │   ├── shared.gsc
+        │   └── ui.gsc
+        └── gameplay/
+            ├── perks.gsc
+            ├── rewards.gsc
+            ├── stim.gsc
+            └── weapons.gsc
 
 ---
 

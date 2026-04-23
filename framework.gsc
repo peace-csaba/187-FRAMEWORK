@@ -1,6 +1,6 @@
 // 📌 187 — FRAMEWORK
 
-// Version: 1.3
+// Version: 1.4
 
 ////////////////////////////////////////////////////////////////////////
 
@@ -18,8 +18,8 @@ setupFrameworkConfig()
     level.enablePlateRewards = true;
     level.enableWeaponSpeedBoost = true;
 
-    // Clean framework-owned gamemode layer
-    level.enableGamemode = true;
+    // Clean framework-owned addons layer
+    level.enableAddons = true;
 }
 
 ////////////////////////////////////////////////////////////////////////
@@ -86,10 +86,8 @@ init()
     custom_scripts\framework\sources\gameplay\perks::initPerkNames();
     custom_scripts\framework\sources\gameplay\perks::buildPerkList();
 
-    level thread custom_scripts\framework\sources\core\shared::initDvarsProtection();
-
-    if (level.enableGamemode)
-        level thread custom_scripts\framework\gamemode::frameworkInit();
+    if (level.enableAddons)
+        level thread custom_scripts\framework\sources\core\addons::frameworkInit();
 
     level thread onPlayerConnected();
     level thread watchFrameworkInfilReset();
@@ -114,8 +112,8 @@ onPlayerConnected()
         if (level.enableAnnouncer)
             player thread custom_scripts\framework\sources\core\ui::startAnnouncer();
 
-        if (level.enableGamemode)
-            player thread custom_scripts\framework\gamemode::onFrameworkPlayerConnected();
+        if (level.enableAddons)
+            player thread custom_scripts\framework\sources\core\addons::onFrameworkPlayerConnected();
 
         player thread onPlayerSpawned();
     }
