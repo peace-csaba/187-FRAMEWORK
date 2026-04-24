@@ -10,22 +10,39 @@ This project is designed as a long-term base for future gameplay systems, balanc
 
 ## Current Release
 
-### Addons Rework — v1.4  
-**The Medical Nose Update**
+### Addons Rework — v1.5  
+**The Medical Heroin Update**
 
-This release focuses on a cleaner framework-owned addon layer and a more consistent DVAR structure.
+## Saving / Data System
 
-### Included in v1.4
-- reworked addon routing through `framework/sources/core/addons.gsc`
-- cleaned `framework.gsc` bootstrap flow
-- simplified `shared.gsc` into shared-only helpers
-- rebuilt DVAR-controlled HUD toggle
-- rebuilt DVAR-controlled bot management
-- reworked stim boost DVAR ownership
-- cleaned combat addon watcher foundations
-- unified `fw_` naming for addon DVARs
+The framework now includes a dedicated data layer through `framework/sources/core/data.gsc`.
 
-The goal of this version is to keep the public framework cleaner, easier to maintain, and easier to expand without falling back into a monolithic project structure.
+### Current State
+The current save system is structured as an abstraction layer so the rest of the framework does not need to know how data is stored.
+
+At the moment, it handles:
+- `frameworkSR`
+- `frameworkKills`
+- `frameworkDeaths`
+
+### What it does now
+- loads framework player data on connect/spawn
+- saves framework player data after rank/stat changes
+- separates match-stat reset from rank/SR handling
+- keeps save/load ownership isolated in one file for future upgrades
+
+### Important Note
+The current implementation is a **persistence test / fallback structure**, not a fully proven restart-safe storage backend.
+
+That means:
+- runtime/session handling is supported
+- the framework structure is ready for future persistence work
+- true restart-safe rank saving will require a stronger backend if the current build does not expose proper persistent stat functions
+
+### Why this matters
+Even though full restart-safe persistence is still backend-dependent, the framework is now prepared for it.
+
+When a better storage backend is found later, only `core/data.gsc` should need to change, while the rest of the framework can continue using the same save/load flow.
 
 ---
 
