@@ -8,12 +8,7 @@ This project is designed as a long-term base for future gameplay systems, balanc
 
 ---
 
-## Current Release
-
-### Addons Rework — v1.5  
-**The Medical Heroin Update**
-
-## Saving / Data System
+## Current Release — Saving / Data System via GSC - v1.5
 
 The framework now includes a dedicated data layer through `framework/sources/core/data.gsc`.
 
