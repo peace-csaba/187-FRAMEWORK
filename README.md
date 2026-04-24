@@ -6,11 +6,6 @@ The framework separates reusable systems from project-specific systems so featur
 
 This project is designed as a long-term base for future gameplay systems, balance changes, custom progression, and framework-owned mode logic.
 
-Preview:
-<video controls width="100%">
-  <source src="https://github.com/user-attachments/assets/39d2b736-3bc8-488d-bb48-015abf5593ed" type="video/mp4">
-</video>
-
 ---
 
 ## Current Release — Saving / Data System via GSC - v1.5
