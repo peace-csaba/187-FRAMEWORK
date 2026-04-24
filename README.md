@@ -7,7 +7,7 @@ The framework separates reusable systems from project-specific systems so featur
 This project is designed as a long-term base for future gameplay systems, balance changes, custom progression, and framework-owned mode logic.
 
 Preview:
-<video src="https://github.com/peace-csaba/187-FRAMEWORK/releases/download/1.5/2026-04-24_08-44-07.mp4">
+https://github.com/peace-csaba/187-FRAMEWORK/releases/download/1.5/2026-04-24_08-44-07.mp4
 
 ---
 
