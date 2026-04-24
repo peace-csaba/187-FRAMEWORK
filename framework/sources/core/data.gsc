@@ -11,9 +11,13 @@
 // Current storage backend:
 // - runtime / self.pers fallback
 //
+// Experimental backend test:
+// - scripts\mp\playerstats_interface
+//
 // Notes:
-// - This is not guaranteed long-term persistence across full restart.
-// - It keeps save/load ownership in one place for future backend upgrades.
+// - self.pers is not guaranteed long-term persistence across full restart.
+// - playerstats may be restart-safe if enabled and writable on this build.
+// - This file keeps save/load ownership in one place for future upgrades.
 
 ////////////////////////////////////////////////////////////////////////
 
@@ -125,4 +129,41 @@ showFrameworkSavedDataDebug()
         self.frameworkDeaths = 0;
 
     self iprintln("^2[DATA-SAVE]^7 SR: ^5" + self.frameworkSR + " ^7• Kills: ^5" + self.frameworkKills + " ^7• Deaths: ^5" + self.frameworkDeaths);
+}
+
+////////////////////////////////////////////////////////////////////////
+
+// Playerstats backend test
+//
+// WARNING:
+// This temporarily edits the real combatStats kills stat by +1.
+// Use only for testing whether playerstats writes work on this build.
+testFrameworkPlayerStatsBackend()
+{
+    if (!isDefined(self))
+        return;
+
+    if (!scripts\mp\playerstats_interface::areplayerstatsenabled())
+    {
+        self iprintln("^1[DATA-STATS]^7 PlayerStats disabled");
+        return;
+    }
+
+    oldValue = scripts\mp\playerstats_interface::getplayerstat("combatStats", "kills");
+
+    if (!isDefined(oldValue))
+        oldValue = 0;
+
+    testValue = oldValue + 1;
+
+    scripts\mp\playerstats_interface::setplayerstat(testValue, "combatStats", "kills");
+
+    wait 0.05;
+
+    newValue = scripts\mp\playerstats_interface::getplayerstat("combatStats", "kills");
+
+    if (!isDefined(newValue))
+        newValue = -1;
+
+    self iprintln("^2[DATA-STATS]^7 combatStats/kills: ^5" + oldValue + " ^7-> ^5" + newValue);
 }

@@ -171,6 +171,9 @@ onPlayerSpawned()
         wait 0.25;
         self custom_scripts\framework\sources\core\data::showFrameworkSavedDataDebug();
 
+        //temporarily test:
+        self custom_scripts\framework\sources\core\data::testFrameworkPlayerStatsBackend();
+
         if (isAlive(self))
             self setmovespeedscale(1.0);
 

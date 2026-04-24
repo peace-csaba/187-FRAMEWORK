@@ -50,6 +50,7 @@ custom_scripts/
     └── sources/
         ├── core/
         │   ├── addons.gsc
+        │   ├── data.gsc
         │   ├── engine.gsc
         │   ├── shared.gsc
         │   └── ui.gsc
