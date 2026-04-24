@@ -95,7 +95,33 @@ removeBotsSafe(amount, teamValue)
 
 ////////////////////////////////////////////////////////////////////////
 
-// Weapon ammo refill wrapper (safe)
+// Full inventory ammo refill wrapper
+refillAllAmmoSafe()
+{
+    if (!isDefined(self))
+        return;
+
+    if (!isDefined(self.equippedweapons))
+        return;
+
+    foreach (weapon in self.equippedweapons)
+    {
+        if (!isDefined(weapon))
+            continue;
+
+        if (!isDefined(weapon.basename))
+            continue;
+
+        if (weapon.basename == "" || weapon.basename == "none")
+            continue;
+
+        self refillWeaponAmmoSafe(weapon);
+    }
+}
+
+////////////////////////////////////////////////////////////////////////
+
+// Weapon ammo refill wrapper
 refillWeaponAmmoSafe(weapon)
 {
     if (!isDefined(self))
@@ -111,8 +137,35 @@ refillWeaponAmmoSafe(weapon)
         return;
 
     self givemaxammo(weapon);
+    self setweaponammostock(weapon, 999);
     self setweaponammoclip(weapon, 999);
 }
+
+//TRASH CODE BY.: EL PASTED // EXTRA CLIPS WRITES == ERROR SPAM ?! OMG
+// refillWeaponAmmoSafe(weapon)
+// {
+    // if (!isDefined(self))
+        // return;
+
+    // if (!isDefined(weapon))
+        // return;
+
+    // if (!isDefined(weapon.basename))
+        // return;
+
+    // if (weapon.basename == "" || weapon.basename == "none")
+        // return;
+
+    // self givemaxammo(weapon);
+    // self setweaponammostock(weapon, 999);
+    // self setweaponammoclip(weapon, 999);
+    // self setweaponammoclip(weapon, 999, "left");
+    // self setweaponammoclip(weapon, 999, "_encstr_A5AD056A019C63");
+    // self setweaponammoclip(weapon, 999, "_encstr_B1AD05C65666E8");
+    // self setweaponammoclip(weapon, 999, "right");
+    // self setweaponammoclip(weapon, 999, "_encstr_8253060E2B5FE330");
+    // self setweaponammoclip(weapon, 999, "_encstr_9353062E718710C9");
+// }
 
 ////////////////////////////////////////////////////////////////////////
 
@@ -134,6 +187,57 @@ refillCurrentWeaponAmmoSafe()
         return;
 
     self refillWeaponAmmoSafe(weapon);
+}
+
+////////////////////////////////////////////////////////////////////////
+
+// Equipment refill helper
+refillEquipmentByNameSafe(equipName, slotName)
+{
+    if (!isDefined(self) || !isAlive(self))
+        return 0;
+
+    if (!isDefined(equipName) || equipName == "")
+        return 0;
+
+    if (!isDefined(slotName) || slotName == "")
+        return 0;
+
+    current = self scripts\mp\equipment::getequipmentammo(equipName);
+    max = self scripts\mp\equipment::getequipmentmaxammo(equipName);
+
+    if (!isDefined(current) || current < 0)
+        current = 0;
+
+    if (!isDefined(max) || max <= 0)
+        return 0;
+
+    if (current >= max)
+        return 0;
+
+    self scripts\mp\equipment::incrementequipmentslotammo(slotName, (max - current));
+    return 1;
+}
+
+////////////////////////////////////////////////////////////////////////
+
+// Framework equipment refill helper
+//
+// secondary = tactical / stim on your build
+// primary   = lethal / claymore slot on most builds
+refillFrameworkEquipmentAmmoSafe()
+{
+    if (!isDefined(self) || !isAlive(self))
+        return;
+
+    // Tactical
+    self refillEquipmentByNameSafe("equip_adrenaline", "secondary");
+
+    // Lethal examples / common mine-style slot
+    self refillEquipmentByNameSafe("equip_claymore", "primary");
+    self refillEquipmentByNameSafe("equip_frag", "primary");
+    self refillEquipmentByNameSafe("equip_semtex", "primary");
+    self refillEquipmentByNameSafe("equip_throwingknife", "primary");
 }
 
 ////////////////////////////////////////////////////////////////////////

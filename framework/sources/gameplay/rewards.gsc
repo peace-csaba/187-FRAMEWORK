@@ -53,6 +53,7 @@ addPlayerSR(amount)
         self.frameworkSR = 250;
 
     self.frameworkSR += amount;
+    self custom_scripts\framework\sources\core\data::saveFrameworkPlayerData();
 }
 
 ////////////////////////////////////////////////////////////////////////
@@ -67,6 +68,8 @@ removePlayerSR(amount)
 
     if (self.frameworkSR < 0)
         self.frameworkSR = 0;
+
+    self custom_scripts\framework\sources\core\data::saveFrameworkPlayerData();
 }
 
 ////////////////////////////////////////////////////////////////////////
@@ -182,10 +185,6 @@ getRewardsPlayer()
 ////////////////////////////////////////////////////////////////////////
 
 // Death watcher
-//
-// Chat order appears as:
-// [Stats]
-// [Ranks]
 watchFrameworkDeaths()
 {
     self endon("disconnect");
@@ -212,20 +211,16 @@ watchFrameworkDeaths()
         self removePlayerSR(5);
         wait 0.05;
 
-        // printed in reverse so Stats appears above Ranks in chat
         self showSRLoss(5);
         self showDeathStats();
+
+        self custom_scripts\framework\sources\core\data::saveFrameworkPlayerData();
     }
 }
 
 ////////////////////////////////////////////////////////////////////////
 
 // Kill watcher
-//
-// Chat order appears as:
-// [Stats]
-// [Ranks]
-// [Rewards]
 killRewards()
 {
     self endon("disconnect");
@@ -262,12 +257,10 @@ killRewards()
         self addPlayerSR(10);
         self.killStreak++;
 
-        // printed in reverse so final chat stack becomes:
-        // [Stats]
-        // [Ranks]
-        // [Rewards]
         self getRewardsPlayer();
         self showSRGain(10);
         self showKillStats();
+
+        self custom_scripts\framework\sources\core\data::saveFrameworkPlayerData();
     }
 }

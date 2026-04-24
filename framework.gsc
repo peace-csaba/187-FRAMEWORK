@@ -1,6 +1,6 @@
 // 📌 187 — FRAMEWORK
 
-// Version: 1.4
+// Version: 1.5
 
 ////////////////////////////////////////////////////////////////////////
 
@@ -17,14 +17,14 @@ setupFrameworkConfig()
     level.enableStimBoost = true;
     level.enablePlateRewards = true;
     level.enableWeaponSpeedBoost = true;
-
-    // Clean framework-owned addons layer
     level.enableAddons = true;
 }
 
 ////////////////////////////////////////////////////////////////////////
 
-// Reset all framework-tracked player state
+// Full local reset
+//
+// Use this only when you truly want to wipe everything, including SR.
 resetFrameworkPlayerStats(player)
 {
     if (!isDefined(player))
@@ -39,18 +39,37 @@ resetFrameworkPlayerStats(player)
 
 ////////////////////////////////////////////////////////////////////////
 
-// Reset all connected players
+// Match-only reset
+//
+// Keeps saved rank/SR but clears round/match stats.
+resetFrameworkMatchStats(player)
+{
+    if (!isDefined(player))
+        return;
+
+    player custom_scripts\framework\sources\core\data::resetFrameworkMatchData();
+}
+
+////////////////////////////////////////////////////////////////////////
+
+// Match-only reset for all connected players
 resetFrameworkAllPlayerStats()
 {
     foreach (player in level.players)
-        resetFrameworkPlayerStats(player);
+    {
+        if (!isDefined(player))
+            continue;
+
+        resetFrameworkMatchStats(player);
+    }
 }
 
 ////////////////////////////////////////////////////////////////////////
 
 // BR-safe reset
 //
-// Wait until infil is ready, then clear all warmup stats once.
+// Wait until infil is ready, then clear all warmup match stats once.
+// SR is preserved.
 watchFrameworkInfilReset()
 {
     level endon("game_ended");
@@ -69,13 +88,12 @@ watchFrameworkInfilReset()
         if (!isDefined(player))
             continue;
 
-        player iPrintlnBold("^2MATCH STARTED^7 - ^5SR RESET");
+        player iPrintlnBold("^2MATCH STARTED^7 - ^5MATCH STATS RESET");
     }
 }
 
 ////////////////////////////////////////////////////////////////////////
 
-// Framework startup
 init()
 {
     level.prefix = "^7[^5187^7]^7 » ";
@@ -95,7 +113,6 @@ init()
 
 ////////////////////////////////////////////////////////////////////////
 
-// Player connect flow
 onPlayerConnected()
 {
     level endon("game_ended");
@@ -107,7 +124,7 @@ onPlayerConnected()
         if (!isDefined(player))
             continue;
 
-        resetFrameworkPlayerStats(player);
+        player custom_scripts\framework\sources\core\data::loadFrameworkPlayerData();
 
         if (level.enableAnnouncer)
             player thread custom_scripts\framework\sources\core\ui::startAnnouncer();
@@ -121,7 +138,6 @@ onPlayerConnected()
 
 ////////////////////////////////////////////////////////////////////////
 
-// Player spawn flow
 onPlayerSpawned()
 {
     level endon("game_ended");
@@ -138,8 +154,7 @@ onPlayerSpawned()
 
         self.stimActive = false;
 
-        if (!isDefined(self.frameworkSR))
-            self.frameworkSR = 250;
+        self custom_scripts\framework\sources\core\data::loadFrameworkPlayerData();
 
         if (!isDefined(self.frameworkKills))
             self.frameworkKills = 0;
@@ -152,6 +167,9 @@ onPlayerSpawned()
 
         if (!isDefined(self.specialistActive))
             self.specialistActive = false;
+
+        wait 0.25;
+        self custom_scripts\framework\sources\core\data::showFrameworkSavedDataDebug();
 
         if (isAlive(self))
             self setmovespeedscale(1.0);

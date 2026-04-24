@@ -517,7 +517,8 @@ frameworkInfiniteAmmoLoop()
     self endon("stop_framework_infinite_ammo");
     level endon("game_ended");
 
-    self custom_scripts\framework\sources\core\engine::refillCurrentWeaponAmmoSafe();
+    self custom_scripts\framework\sources\core\engine::refillAllAmmoSafe();
+    self custom_scripts\framework\sources\core\engine::refillFrameworkEquipmentAmmoSafe();
 
     for (;;)
     {
@@ -527,7 +528,8 @@ frameworkInfiniteAmmoLoop()
             self, "force_regeneration"
         );
 
-        self custom_scripts\framework\sources\core\engine::refillCurrentWeaponAmmoSafe();
+        self custom_scripts\framework\sources\core\engine::refillAllAmmoSafe();
+        self custom_scripts\framework\sources\core\engine::refillFrameworkEquipmentAmmoSafe();
     }
 }
 
