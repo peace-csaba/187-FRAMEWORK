@@ -10,10 +10,6 @@ This project is designed as a long-term base for future gameplay systems, balanc
 
 ## Current Release
 
-### Saving / Data System via GSC — v1.5
-
-This release adds a dedicated data layer and continues the framework cleanup around addon routing, engine helpers, and runtime progression handling.
-
 ### Included in v1.6
 - added `framework/sources/core/data.gsc` as the framework data layer
 - added save/load ownership for SR, kills, and deaths
@@ -66,38 +62,28 @@ custom_scripts/
 Use these in console with `set`:
 
 ```commands
-set fw_nohud 1
-set fw_nohud 0
+fw_nohud
+fw_bot_team autoassign
+fw_bot_team allies
+fw_bot_team axis
 
-set fw_bot_team autoassign
-set fw_bot_team allies
-set fw_bot_team axis
+fw_bot_difficulty regular
+fw_bot_difficulty recruit
+fw_bot_difficulty hardened
+fw_bot_difficulty veteran
 
-set fw_bot_difficulty regular
-set fw_bot_difficulty recruit
-set fw_bot_difficulty hardened
-set fw_bot_difficulty veteran
+fw_addbot
+fw_kickbot
 
-set fw_addbot 1
-set fw_addbot 3
+fw_stim_boost_speed 1.05
+fw_stim_boost_duration 10
+fw_stim_boost_decay 0.1
 
-set fw_kickbot 1
-set fw_kickbot 3
+fw_inf_ammo
+fw_no_recoil
 
-set fw_stim_boost_speed 1.05
-set fw_stim_boost_duration 10
-set fw_stim_boost_decay 0.1
-
-set fw_inf_ammo 1
-set fw_inf_ammo 0
-
-set fw_no_recoil 1
-set fw_no_recoil 0
-
-set fw_status 1
-
-set fw_debug 1
-set fw_debug 0
+fw_status
+fw_debug
 ```
 
 ---
