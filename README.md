@@ -2,42 +2,31 @@
 
 **187 — FRAMEWORK** is a modular GSC framework built for clean project structure, easier maintenance, and long-term expansion.
 
-The framework separates reusable systems from project-specific systems so features can be added, tested, and reworked without turning the project into one large monolithic script.
+The framework separates reusable systems from framework-owned systems so features can be added, tested, and reworked without turning the project into one large monolithic script.
 
-This project is designed as a long-term base for future gameplay systems, balance changes, custom progression, and framework-owned mode logic.
+This project is designed as a long-term base for future gameplay systems, balance changes, custom progression, addon tools, and framework-owned logic.
 
 ---
 
-## Current Release — Saving / Data System via GSC - v1.5
+## Current Release
 
-The framework now includes a dedicated data layer through `framework/sources/core/data.gsc`.
+### Saving / Data System via GSC — v1.5
 
-### Current State
-The current save system is structured as an abstraction layer so the rest of the framework does not need to know how data is stored.
+This release adds a dedicated data layer and continues the framework cleanup around addon routing, engine helpers, and runtime progression handling.
 
-At the moment, it handles:
-- `frameworkSR`
-- `frameworkKills`
-- `frameworkDeaths`
+### Included in v1.6
+- added `framework/sources/core/data.gsc` as the framework data layer
+- added save/load ownership for SR, kills, and deaths
+- separated match-stat reset behavior from rank/SR handling
+- cleaned `framework.gsc` player lifecycle and spawn debug flow
+- kept restart persistence backend-ready without hardcoding storage into gameplay files
+- cleaned `engine.gsc` ammo helper comments and risky clip-channel notes
+- kept addon DVAR systems under `framework/sources/core/addons.gsc`
 
-### What it does now
-- loads framework player data on connect/spawn
-- saves framework player data after rank/stat changes
-- separates match-stat reset from rank/SR handling
-- keeps save/load ownership isolated in one file for future upgrades
+### Saving Status
+The current data layer supports runtime/session-style data handling and is structured for future persistence backends.
 
-### Important Note
-The current implementation is a **persistence test / fallback structure**, not a fully proven restart-safe storage backend.
-
-That means:
-- runtime/session handling is supported
-- the framework structure is ready for future persistence work
-- true restart-safe rank saving will require a stronger backend if the current build does not expose proper persistent stat functions
-
-### Why this matters
-Even though full restart-safe persistence is still backend-dependent, the framework is now prepared for it.
-
-When a better storage backend is found later, only `core/data.gsc` should need to change, while the rest of the framework can continue using the same save/load flow.
+True restart-safe rank saving is still backend-dependent. If a stronger player-stat or external storage backend is added later, only `core/data.gsc` should need to change.
 
 ---
 
@@ -59,22 +48,113 @@ custom_scripts/
             ├── rewards.gsc
             ├── stim.gsc
             └── weapons.gsc
+```
+
+### Ownership
+- `framework.gsc` → main bootstrap and player lifecycle
+- `core/addons.gsc` → framework-owned addon systems and addon DVAR watchers
+- `core/data.gsc` → framework data load/save abstraction
+- `core/engine.gsc` → engine-facing wrappers and risky helper calls
+- `core/shared.gsc` → shared helpers and generic framework utilities
+- `core/ui.gsc` → framework printing and UI helpers
+- `gameplay/*` → reusable gameplay systems
 
 ---
 
 ## Console DVAR Commands
 
+Use these in console with `set`:
+
 ```commands
-fw_nohud
+set fw_nohud 1
+set fw_nohud 0
 
-fw_addbot
-fw_kickbot
-fw_bot_team
-fw_bot_difficulty
+set fw_bot_team autoassign
+set fw_bot_team allies
+set fw_bot_team axis
 
-fw_stim_boost_speed
-fw_stim_boost_duration
-fw_stim_boost_decay
+set fw_bot_difficulty regular
+set fw_bot_difficulty recruit
+set fw_bot_difficulty hardened
+set fw_bot_difficulty veteran
 
-fw_inf_ammo
-fw_no_recoil
+set fw_addbot 1
+set fw_addbot 3
+
+set fw_kickbot 1
+set fw_kickbot 3
+
+set fw_stim_boost_speed 1.05
+set fw_stim_boost_duration 10
+set fw_stim_boost_decay 0.1
+
+set fw_inf_ammo 1
+set fw_inf_ammo 0
+
+set fw_no_recoil 1
+set fw_no_recoil 0
+
+set fw_status 1
+
+set fw_debug 1
+set fw_debug 0
+```
+
+---
+
+## Saving / Data System
+
+The framework now includes a dedicated data layer through `framework/sources/core/data.gsc`.
+
+### Current State
+The current save system is structured as an abstraction layer so the rest of the framework does not need to know how data is stored.
+
+At the moment, it handles:
+- `frameworkSR`
+- `frameworkKills`
+- `frameworkDeaths`
+
+### What it does now
+- loads framework player data on connect/spawn
+- saves framework player data after rank/stat changes
+- separates match-stat reset from rank/SR handling
+- keeps save/load ownership isolated in one file for future upgrades
+
+### Important Note
+The current implementation is a runtime/session fallback structure, not a fully proven restart-safe storage backend.
+
+That means:
+- runtime/session handling is supported
+- the framework structure is ready for future persistence work
+- true restart-safe rank saving will require a stronger backend if the current build does not expose proper persistent stat functions
+
+### Why this matters
+When a better storage backend is found later, only `core/data.gsc` should need to change, while the rest of the framework can continue using the same save/load flow.
+
+---
+
+## Notes
+
+- `fw_nohud` is handled through the addon layer with a per-player watcher model.
+- bot controls are fully DVAR-driven.
+- stim boost configuration is owned by the addon layer.
+- infinite ammo supports weapon refill handling and framework equipment refill support.
+- `data.gsc` provides a clean save-load abstraction layer for future persistence work.
+- `fw_status` prints a quick framework state readout in-game.
+- `fw_debug` is a foundation toggle for future debug-only systems.
+
+---
+
+## Direction
+
+The current direction of **187 — FRAMEWORK** is:
+
+- cleaner ownership
+- fewer oversized files
+- framework-owned addon systems
+- reusable gameplay modules
+- stable DVAR-driven control
+- cleaner combat and engine helper separation
+- future-ready data and progression structure
+
+This release is intended as a cleaner and stronger base for continued framework development.

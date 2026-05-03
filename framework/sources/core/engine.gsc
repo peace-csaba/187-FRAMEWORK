@@ -141,31 +141,7 @@ refillWeaponAmmoSafe(weapon)
     self setweaponammoclip(weapon, 999);
 }
 
-//TRASH CODE BY.: EL PASTED // EXTRA CLIPS WRITES == ERROR SPAM ?! OMG
-// refillWeaponAmmoSafe(weapon)
-// {
-    // if (!isDefined(self))
-        // return;
-
-    // if (!isDefined(weapon))
-        // return;
-
-    // if (!isDefined(weapon.basename))
-        // return;
-
-    // if (weapon.basename == "" || weapon.basename == "none")
-        // return;
-
-    // self givemaxammo(weapon);
-    // self setweaponammostock(weapon, 999);
-    // self setweaponammoclip(weapon, 999);
-    // self setweaponammoclip(weapon, 999, "left");
-    // self setweaponammoclip(weapon, 999, "_encstr_A5AD056A019C63");
-    // self setweaponammoclip(weapon, 999, "_encstr_B1AD05C65666E8");
-    // self setweaponammoclip(weapon, 999, "right");
-    // self setweaponammoclip(weapon, 999, "_encstr_8253060E2B5FE330");
-    // self setweaponammoclip(weapon, 999, "_encstr_9353062E718710C9");
-// }
+// Extra clip-channel writes are intentionally disabled because they can crash on some weapon states.
 
 ////////////////////////////////////////////////////////////////////////
 

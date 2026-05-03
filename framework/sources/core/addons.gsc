@@ -19,6 +19,8 @@
 // - fw_stim_boost_decay
 // - fw_inf_ammo
 // - fw_no_recoil
+// - fw_debug
+// - fw_status
 
 main()
 {
@@ -49,6 +51,7 @@ onFrameworkPlayerConnected()
     self thread watchFrameworkNoHudDvar();
     self thread watchFrameworkInfiniteAmmoDvar();
     self thread watchFrameworkNoRecoilDvar();
+    self thread watchFrameworkStatusDvar();
     self thread frameworkAddonPlayerRuntime();
 }
 
@@ -117,6 +120,10 @@ initFrameworkAddonDvars()
     // Combat
     setDvarIfUninitialized("fw_inf_ammo", 0);
     setDvarIfUninitialized("fw_no_recoil", 0);
+
+    // Debug / status
+    setDvarIfUninitialized("fw_debug", 0);
+    setDvarIfUninitialized("fw_status", 0);
 
     level.frameworkLastAddBot = 0;
     level.frameworkLastKickBot = 0;
@@ -596,4 +603,109 @@ frameworkNoRecoilLoop()
         self custom_scripts\framework\sources\core\engine::enableNoRecoilSafe();
         wait 0.05;
     }
+}
+
+////////////////////////////////////////////////////////////////////////
+
+// =====================================================
+// DEBUG / STATUS
+// =====================================================
+
+watchFrameworkStatusDvar()
+{
+    self endon("disconnect");
+    level endon("game_ended");
+
+    lastStatus = getDvarInt("fw_status");
+    lastDebug = getDvarInt("fw_debug");
+
+    if (lastStatus != 0 && lastStatus != 1)
+    {
+        lastStatus = 0;
+        setDvar("fw_status", "0");
+    }
+
+    if (lastDebug != 0 && lastDebug != 1)
+    {
+        lastDebug = 0;
+        setDvar("fw_debug", "0");
+    }
+
+    for (;;)
+    {
+        statusValue = getDvarInt("fw_status");
+        debugValue = getDvarInt("fw_debug");
+
+        if (statusValue != 0 && statusValue != 1)
+        {
+            statusValue = 0;
+            setDvar("fw_status", "0");
+        }
+
+        if (debugValue != 0 && debugValue != 1)
+        {
+            debugValue = 0;
+            setDvar("fw_debug", "0");
+        }
+
+        if (statusValue != lastStatus)
+        {
+            lastStatus = statusValue;
+
+            if (statusValue == 1)
+            {
+                self printFrameworkStatus();
+                setDvar("fw_status", "0");
+                lastStatus = 0;
+            }
+        }
+
+        if (debugValue != lastDebug)
+        {
+            lastDebug = debugValue;
+
+            if (debugValue == 1)
+                self iprintln(level.prefix + "^5[DEBUG]^7 » ^2Enabled");
+            else
+                self iprintln(level.prefix + "^5[DEBUG]^7 » ^1Disabled");
+        }
+
+        wait 0.25;
+    }
+}
+
+////////////////////////////////////////////////////////////////////////
+
+printFrameworkStatus()
+{
+    sr = 250;
+    kills = 0;
+    deaths = 0;
+    streak = 0;
+
+    if (isDefined(self.frameworkSR))
+        sr = self.frameworkSR;
+
+    if (isDefined(self.frameworkKills))
+        kills = self.frameworkKills;
+
+    if (isDefined(self.frameworkDeaths))
+        deaths = self.frameworkDeaths;
+
+    if (isDefined(self.killStreak))
+        streak = self.killStreak;
+
+    noHud = getDvarInt("fw_nohud");
+    infAmmo = getDvarInt("fw_inf_ammo");
+    noRecoil = getDvarInt("fw_no_recoil");
+    debugValue = getDvarInt("fw_debug");
+
+    stimSpeed = getDvarFloat("fw_stim_boost_speed");
+    stimDuration = getDvarInt("fw_stim_boost_duration");
+    stimDecay = getDvarFloat("fw_stim_boost_decay");
+
+    self iprintln(level.prefix + "^5[STATUS]^7 » ^2187 FRAMEWORK ^7v1.6");
+    self iprintln(level.prefix + "^5[STATUS]^7 » ^5SR:^7 " + sr + " ^7• ^2Kills:^7 " + kills + " ^7• ^1Deaths:^7 " + deaths + " ^7• ^3Streak:^7 " + streak);
+    self iprintln(level.prefix + "^5[STATUS]^7 » ^3NoHUD:^7 " + noHud + " ^7• ^2InfAmmo:^7 " + infAmmo + " ^7• ^2NoRecoil:^7 " + noRecoil + " ^7• ^5Debug:^7 " + debugValue);
+    self iprintln(level.prefix + "^5[STATUS]^7 » ^2Stim:^7 speed " + stimSpeed + " ^7/ duration " + stimDuration + " ^7/ decay " + stimDecay);
 }

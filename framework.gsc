@@ -1,6 +1,6 @@
 // 📌 187 — FRAMEWORK
 
-// Version: 1.5
+// Version: 1.6
 
 ////////////////////////////////////////////////////////////////////////
 
@@ -171,8 +171,6 @@ onPlayerSpawned()
         wait 0.25;
         self custom_scripts\framework\sources\core\data::showFrameworkSavedDataDebug();
 
-        //temporarily test:
-        self custom_scripts\framework\sources\core\data::testFrameworkPlayerStatsBackend();
 
         if (isAlive(self))
             self setmovespeedscale(1.0);
