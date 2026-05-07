@@ -82,6 +82,21 @@ fw_no_recoil
 
 fw_status
 fw_debug
+
+fw_noclip
+fw_noclip_bind
+fw_noclip_speed
+fw_noclip_sprint_speed
+
+fw_bounce_spawn
+fw_bounce_delete
+fw_bounce_clear
+fw_bounce_bind
+fw_bounce_radius
+fw_bounce_min_fall_speed
+fw_bounce_marker
+fw_bounce_marker_model
+
 ```
 
 ---
