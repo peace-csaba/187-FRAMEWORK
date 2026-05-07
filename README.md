@@ -19,9 +19,7 @@ This project is designed as a long-term base for future gameplay systems, balanc
 - cleaned `engine.gsc` ammo helper comments and risky clip-channel notes
 - kept addon DVAR systems under `framework/sources/core/addons.gsc`
 
-### Bounce System v1.0
-
-v1.0 introduces the first framework-owned bounce utility system.
+### Bounce System v1.0 - introduces the first framework-owned bounce utility system.
 
 - runtime bounce creation
 - runtime bounce deletion
