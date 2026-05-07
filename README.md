@@ -10,10 +10,6 @@ This project is designed as a long-term base for future gameplay systems, balanc
 
 ## Current Release
 
-### Saving / Data System via GSC — v1.5
-
-This release adds a dedicated data layer and continues the framework cleanup around addon routing, engine helpers, and runtime progression handling.
-
 ### Included in v1.6
 - added `framework/sources/core/data.gsc` as the framework data layer
 - added save/load ownership for SR, kills, and deaths
