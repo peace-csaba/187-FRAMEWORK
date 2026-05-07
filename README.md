@@ -168,3 +168,12 @@ The current direction of **187 — FRAMEWORK** is:
 - future-ready data and progression structure
 
 This release is intended as a cleaner and stronger base for continued framework development.
+
+
+---
+
+# Framework Hardening
+
+This build avoids exposing old predictable global configuration names and includes a defensive bot-flood watchdog.
+
+The watchdog monitors excessive bot counts and cleans the lobby if a hostile or broken script attempts to spawn an unreasonable number of bots.

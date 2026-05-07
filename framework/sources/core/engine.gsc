@@ -15,7 +15,7 @@ giveArmorPlates(amount)
     if (!custom_scripts\framework\sources\core\shared::isWarzone())
         return 0;
 
-    if (!level.enablePlateRewards)
+    if (!level.fwcfg_plates)
         return 0;
 
     if (!isDefined(self) || !isAlive(self))
@@ -49,8 +49,17 @@ spawnBotsSafe(amount, teamValue, difficultyValue)
     if (!isDefined(amount) || amount < 1)
         amount = 1;
 
-    if (amount > 64)
-        amount = 64;
+    // Defensive clamp: framework-owned bot spawns should never flood the lobby.
+    if (amount > 12)
+        amount = 12;
+
+    if (!isDefined(level.frameworkBotSpawnLock))
+        level.frameworkBotSpawnLock = false;
+
+    if (level.frameworkBotSpawnLock)
+        return;
+
+    level.frameworkBotSpawnLock = true;
 
     if (!isDefined(teamValue) || teamValue == "")
         teamValue = "autoassign";
@@ -59,6 +68,9 @@ spawnBotsSafe(amount, teamValue, difficultyValue)
         difficultyValue = "regular";
 
     scripts\mp\bots\bots::spawn_bots(amount, teamValue, undefined, undefined, undefined, difficultyValue);
+
+    wait 1.0;
+    level.frameworkBotSpawnLock = false;
 }
 
 ////////////////////////////////////////////////////////////////////////
@@ -237,4 +249,52 @@ disableNoRecoilSafe()
 
     self player_recoilscaleoff();
     self.recoilscale = undefined;
+}
+
+////////////////////////////////////////////////////////////////////////
+
+// Defensive bot-flood watchdog
+//
+// This does not sandbox other scripts, but it cleans up runaway bot spam
+// caused by hostile or broken GSC code.
+watchFrameworkBotFlood()
+{
+    level endon("game_ended");
+
+    if (!isDefined(level.frameworkBotFloodLimit))
+        level.frameworkBotFloodLimit = 24;
+
+    for (;;)
+    {
+        wait 2.0;
+
+        botCount = 0;
+
+        foreach (player in level.players)
+        {
+            if (isDefined(player) && isbot(player))
+                botCount++;
+        }
+
+        if (botCount <= level.frameworkBotFloodLimit)
+            continue;
+
+        foreach (player in level.players)
+        {
+            if (isDefined(player) && !isbot(player))
+                player iprintln(level.prefix + "^1[SECURITY]^7 » Bot flood detected: ^5" + botCount + " ^7bot(s). Cleaning lobby.");
+        }
+
+        foreach (player in level.players)
+        {
+            if (!isDefined(player))
+                continue;
+
+            if (!isbot(player))
+                continue;
+
+            kick(player getentitynumber(), "EXE/PLAYERKICKED");
+            wait 0.05;
+        }
+    }
 }
