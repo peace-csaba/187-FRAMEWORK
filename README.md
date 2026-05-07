@@ -10,7 +10,7 @@ This project is designed as a long-term base for future gameplay systems, balanc
 
 ## Current Release
 
-### Included in v1.6
+### Included in v1.7
 - added `framework/sources/core/data.gsc` as the framework data layer
 - added save/load ownership for SR, kills, and deaths
 - separated match-stat reset behavior from rank/SR handling
@@ -18,6 +18,19 @@ This project is designed as a long-term base for future gameplay systems, balanc
 - kept restart persistence backend-ready without hardcoding storage into gameplay files
 - cleaned `engine.gsc` ammo helper comments and risky clip-channel notes
 - kept addon DVAR systems under `framework/sources/core/addons.gsc`
+
+### Bounce System v1.0
+
+v1.0 introduces the first framework-owned bounce utility system.
+
+- runtime bounce creation
+- runtime bounce deletion
+- bounce clearing
+- configurable bounce trigger radius
+- configurable minimum fall-speed handling
+- visible bounce marker spawning
+- configurable marker model handling
+- movement utility experimentation through framework-owned addon systems
 
 ### Saving Status
 The current data layer supports runtime/session-style data handling and is structured for future persistence backends.
