@@ -222,7 +222,6 @@ applyFrameworkNoHudValue(value)
     if (value != 0 && value != 1)
         value = 0;
 
-    self setclientomnvar("ui_hide_full_hud", value);
     setDvar("LOPKSRNTTS", value == 1 ? 0 : 1);
 
     if (value == 1)
@@ -836,7 +835,7 @@ addFrameworkBouncePoint()
     self.frameworkBounceMarkers[self.frameworkBounceMarkers.size] = marker;
 
     count = self.frameworkBouncePositions.size;
-    self iprintln(level.prefix + "^6[BOUNCE]^7 » ^2Point #" + count + " saved & created");
+    self iprintln(level.prefix + "^6[BOUNCE]^7 » ^2Point #" + count + " saved");
 }
 
 ////////////////////////////////////////////////////////////////////////
