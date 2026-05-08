@@ -543,83 +543,35 @@ frameworkBotStuckFixLoop()
 
             if (strikes >= 3)
             {
-                self frameworkSmartBotScatterTeleport();
-                self botclearscriptgoal();
-                self botclearscriptenemy();
-                strikes = 0;
-                self.frameworkBotStuck = 0;
-                lastOrigin = self.origin;
-                continue;
-            }
-        }
-        else
-        {
-            strikes = 0;
-            self.frameworkBotStuck = 0;
-        }
-
-        lastOrigin = self.origin;
-    }
-}
-
-////////////////////////////////////////////////////////////////////////
-
-frameworkSmartBotScatterTeleport()
+                self frameworkSmartBotScatterTeleport()
 {
     if (!isDefined(self) || !isAlive(self))
         return;
+
+    // Safe stuck recovery.
+    // The old version used botGetClosestNavigablePoint(), which can throw
+    // DEV ERROR 1681 on some maps / states. This fallback avoids risky nav
+    // queries and only resets bot behavior toward a valid player anchor.
+
+    self botclearscriptgoal();
+    self botclearscriptenemy();
+    self botsetflag("force_sprint", 0);
+    self botsetstance("stand");
 
     anchor = getFrameworkRandomHumanPlayer();
 
     if (!isDefined(anchor))
         anchor = self getFrameworkAliveTeammate();
 
-    anchorOrigin = self.origin;
-
     if (isDefined(anchor) && isDefined(anchor.origin))
-        anchorOrigin = anchor.origin;
-
-    minSpread = 750;
-    maxSpread = 6000;
-
-    if (minSpread >= maxSpread)
     {
-        minSpread = 250;
-        maxSpread = 3000;
+        self botsetscriptgoal(anchor.origin, 256, "critical");
+        wait 0.15;
+        self botsetflag("force_sprint", 1);
     }
 
-    teleportSpot = undefined;
-
-    for (i = 0; i < 12; i++)
-    {
-        angle = randomInt(360);
-        spread = randomFloatRange(minSpread, maxSpread);
-        dir = anglesToForward((0, angle, 0));
-        point = anchorOrigin + (dir * spread);
-        point = (point[0], point[1], point[2] + 500);
-
-        floor = botGetClosestNavigablePoint(point, 1500);
-
-        if (isDefined(floor))
-        {
-            teleportSpot = floor;
-            break;
-        }
-
-        wait 0.05;
-    }
-
-    if (!isDefined(teleportSpot))
-    {
-        fallback = (self.origin[0], self.origin[1], self.origin[2] + 500);
-        teleportSpot = botGetClosestNavigablePoint(fallback, 5000);
-    }
-
-    if (!isDefined(teleportSpot))
-        return;
-
-    self setOrigin((teleportSpot[0], teleportSpot[1], teleportSpot[2] + 20));
-    self botsetscriptgoal(teleportSpot, 128, "critical");
+    if (randomInt(100) < 50)
+        self botpressbutton("jump");
 }
 
 ////////////////////////////////////////////////////////////////////////
