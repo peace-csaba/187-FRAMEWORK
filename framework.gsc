@@ -20,7 +20,7 @@ setupFrameworkConfig()
     level.fwcfg_addons = true;
 
     // Defensive limit used by the bot-flood watchdog against idiot retards.
-    level.frameworkBotFloodLimit = 24;
+    level.frameworkBotFloodLimit = 35;
 
     // DON'T PLAY WITH ME NIGGER'S 
 
