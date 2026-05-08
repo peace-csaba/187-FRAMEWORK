@@ -157,6 +157,7 @@ initFrameworkAddonDvars()
     setDvarIfUninitialized("fw_bounce_delete", 0);
     setDvarIfUninitialized("fw_bounce_clear", 0);
     setDvarIfUninitialized("fw_bounce_bind", 0);
+    setDvarIfUninitialized("fw_bounce_actionslot", 3);
     setDvarIfUninitialized("fw_bounce_radius", 90);
     setDvarIfUninitialized("fw_bounce_min_fall_speed", -250);
     setDvarIfUninitialized("fw_bounce_marker", 1);
@@ -172,6 +173,12 @@ initFrameworkAddonDvars()
     // military_skyhook_depballoon_backpack
     // offhand_wm_deployable_cover
     // trophy_system_mp_explode
+    // br_plunder_extraction_delivery_rope
+    // uk_tool_box_small_01
+    // offhand_wm_briefcase_bomb
+    // military_hq_crate_02_payload
+    // weapon_wm_mg_mobile_turret
+    // x2_military_old_recon_station
 
     level.frameworkLastAddBot = 0;
     level.frameworkLastKickBot = 0;
@@ -667,9 +674,6 @@ ensureFrameworkBounceStorage()
     if (!isDefined(self.frameworkBounceMarkers))
         self.frameworkBounceMarkers = [];
 
-    if (!isDefined(self.frameworkLastBounceBindTime))
-        self.frameworkLastBounceBindTime = 0;
-
     if (!isDefined(self.frameworkLastBounceRadius))
         self.frameworkLastBounceRadius = getDvarFloat("fw_bounce_radius");
 
@@ -681,6 +685,12 @@ ensureFrameworkBounceStorage()
 
     if (!isDefined(self.frameworkLastBounceMarkerModel))
         self.frameworkLastBounceMarkerModel = getDvar("fw_bounce_marker_model");
+
+    if (!isDefined(self.frameworkLastBounceBindState))
+        self.frameworkLastBounceBindState = -1;
+
+    if (!isDefined(self.frameworkLastBounceActionSlot))
+        self.frameworkLastBounceActionSlot = -1;
 }
 
 ////////////////////////////////////////////////////////////////////////
@@ -698,6 +708,7 @@ watchFrameworkBounceDvars()
         deleteValue = getDvarInt("fw_bounce_delete");
         clearValue = getDvarInt("fw_bounce_clear");
         bindValue = getDvarInt("fw_bounce_bind");
+        actionSlot = getDvarInt("fw_bounce_actionslot");
         radiusValue = getDvarFloat("fw_bounce_radius");
         minFallValue = getDvarFloat("fw_bounce_min_fall_speed");
         markerValue = getDvarInt("fw_bounce_marker");
@@ -727,6 +738,12 @@ watchFrameworkBounceDvars()
             setDvar("fw_bounce_bind", "0");
         }
 
+        if (actionSlot < 2 || actionSlot > 4)
+        {
+            actionSlot = 3;
+            setDvar("fw_bounce_actionslot", "3");
+        }
+
         if (!isDefined(radiusValue) || radiusValue <= 0)
         {
             radiusValue = 90;
@@ -747,7 +764,7 @@ watchFrameworkBounceDvars()
 
         if (!isDefined(markerModel) || markerModel == "")
         {
-            markerModel = "com_plasticcase_friendly";
+            markerModel = "military_crate_large_stackable_01_dummy";
             setDvar("fw_bounce_marker_model", markerModel);
         }
 
@@ -789,6 +806,21 @@ watchFrameworkBounceDvars()
             self iprintln(level.prefix + "^6[BOUNCE]^7 » ^5Marker Model:^7 ^5" + markerModel);
         }
 
+        if (bindValue != self.frameworkLastBounceBindState || actionSlot != self.frameworkLastBounceActionSlot)
+        {
+            self.frameworkLastBounceBindState = bindValue;
+            self.frameworkLastBounceActionSlot = actionSlot;
+            self notify("stop_framework_bounce_bind");
+
+            if (bindValue == 1)
+            {
+                self thread frameworkBounceBindLoop(actionSlot);
+                self iprintln(level.prefix + "^6[BOUNCE]^7 » ^2Bind:^7 actionslot ^5" + actionSlot);
+            }
+            else
+                self iprintln(level.prefix + "^6[BOUNCE]^7 » ^1Bind disabled");
+        }
+
         if (spawnValue > 0)
         {
             for (i = 0; i < spawnValue; i++)
@@ -811,9 +843,6 @@ watchFrameworkBounceDvars()
             setDvar("fw_bounce_clear", "0");
         }
 
-        if (bindValue == 1)
-            self handleFrameworkBounceBind();
-
         wait 0.1;
     }
 }
@@ -824,7 +853,7 @@ addFrameworkBouncePoint()
 {
     self ensureFrameworkBounceStorage();
 
-    pos = self.origin;
+    pos = self getOrigin();
     self.frameworkBouncePositions[self.frameworkBouncePositions.size] = pos;
 
     marker = undefined;
@@ -835,7 +864,7 @@ addFrameworkBouncePoint()
     self.frameworkBounceMarkers[self.frameworkBounceMarkers.size] = marker;
 
     count = self.frameworkBouncePositions.size;
-    self iprintln(level.prefix + "^6[BOUNCE]^7 » ^2Point #" + count + " saved");
+    self iprintln(level.prefix + "^6[BOUNCE]^7 » ^2Point #" + count + " saved ^7@ ^5" + pos);
 }
 
 ////////////////////////////////////////////////////////////////////////
@@ -881,6 +910,7 @@ deleteFrameworkBouncePoint()
 
 clearFrameworkBouncePoints()
 {
+    self ensureFrameworkBounceStorage();
     self deleteFrameworkBounceMarkers();
 
     self.frameworkBouncePositions = [];
@@ -899,14 +929,14 @@ spawnFrameworkBounceMarker(pos)
     modelName = getDvar("fw_bounce_marker_model");
 
     if (!isDefined(modelName) || modelName == "")
-        modelName = "com_plasticcase_friendly";
+        modelName = "military_crate_large_stackable_01_dummy";
 
     marker = spawn("script_model", pos);
 
     if (!isDefined(marker))
         return undefined;
 
-    marker setmodel(modelName);
+    marker setModel(modelName);
     marker.angles = (0, 0, 0);
 
     return marker;
@@ -947,24 +977,20 @@ refreshFrameworkBounceMarkers()
 
 ////////////////////////////////////////////////////////////////////////
 
-handleFrameworkBounceBind()
+frameworkBounceBindLoop(actionSlot)
 {
-    if (!isDefined(self) || !isAlive(self))
-        return;
+    self endon("disconnect");
+    self endon("stop_framework_bounce_bind");
+    level endon("game_ended");
 
-    if (!self meleeButtonPressed())
-        return;
+    if (!isDefined(actionSlot) || actionSlot < 2 || actionSlot > 4)
+        actionSlot = 3;
 
-    if (!self jumpButtonPressed())
-        return;
-
-    now = getTime();
-
-    if (isDefined(self.frameworkLastBounceBindTime) && now - self.frameworkLastBounceBindTime < 250)
-        return;
-
-    self.frameworkLastBounceBindTime = now;
-    self applyFrameworkBounceVelocity();
+    for (;;)
+    {
+        self waittill("+actionslot " + int(actionSlot));
+        self applyFrameworkBounceVelocity();
+    }
 }
 
 ////////////////////////////////////////////////////////////////////////
@@ -1019,7 +1045,7 @@ checkFrameworkBouncePoints()
         if (!isDefined(bouncePos))
             continue;
 
-        if (distance(self.origin, bouncePos) < radius)
+        if (distance(self getOrigin(), bouncePos) < radius)
         {
             self applyFrameworkBounceVelocity();
             wait 0.2;
