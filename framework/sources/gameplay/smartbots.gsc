@@ -1,48 +1,3 @@
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-// ========================================================================================================================
-
-// Original credits preserved below.
-// Clean pass: decoded string concatenation, removed no-op obfuscation lines,
-// normalized formatting, and disabled the malicious infinite bot-spawn trap against 187 framework.
-
-// ========================================================================================================================
-
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-// Developed by cilism and enviuz
-
-// Credits:
-// Elbasedd - His "bot sauce" helped with bot ranks.
-// RyGuy2Cool - Inspired me to actually study GSC.
-// The Community - For inspiring me to make a GSC that solves a problem everyone has wanted a fix to.
-// Testers! - Eeffoc, AKAJay, Vanguard, AceAdxm, JoelCantCode, Laura, and everyone who played it.
-
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-
 // 📌 187 — FRAMEWORK
 
 ////////////////////////////////////////////////////////////////////////
@@ -51,391 +6,79 @@
 
 ////////////////////////////////////////////////////////////////////////
 
-// Framework smart bot systems
+// Smart Bot System — Safe Baseline
 //
-// DVARs:
-// - fw_smart_bots
-// - fw_bot_jump_shoot
-// - fw_bot_aggressive
-// - fw_bot_aggressive_interval
-// - fw_bot_aggro_debug
-// - fw_bot_stuck_fix
-// - fw_bot_realistic_difficulty
-// - fw_bot_boss
-// - fw_bot_fake_rank
-// - fw_bot_rank_min
-// - fw_bot_rank_max
-// - fw_bot_prestige_min
-// - fw_bot_prestige_max
+// Stable v1.8.2 version
+//
+// Removed risky native bot calls:
+// - botpressbutton
+// - botsetstance
+// - bot_set_difficulty
+// - setRank
+// - botsetflag
+// - botsetscriptgoal
+// - botsetattacker
+// - botGetClosestNavigablePoint
+//
+// Safe systems retained:
+// - boss bot support
+// - fake rank metadata
+// - safe stuck reset
+// - aggro debug
+// - framework-owned DVAR handling
 
 ////////////////////////////////////////////////////////////////////////
 
 init()
 {
-    if (isDefined(level.frameworkSmartBotsReady))
-        return;
+    level endon("game_ended");
 
-    level.frameworkSmartBotsReady = true;
+    initSmartBotDvars();
 
+    level thread watchSmartBots();
+}
+
+////////////////////////////////////////////////////////////////////////
+
+initSmartBotDvars()
+{
     setDvarIfUninitialized("fw_smart_bots", 1);
-    setDvarIfUninitialized("fw_bot_jump_shoot", 1);
-    setDvarIfUninitialized("fw_bot_aggressive", 1);
-    setDvarIfUninitialized("fw_bot_aggressive_interval", 0);
-    setDvarIfUninitialized("fw_bot_aggro_debug", 0);
-    setDvarIfUninitialized("fw_bot_stuck_fix", 1);
-    setDvarIfUninitialized("fw_bot_realistic_difficulty", 0);
+
     setDvarIfUninitialized("fw_bot_boss", 0);
+
     setDvarIfUninitialized("fw_bot_fake_rank", 1);
-    setDvarIfUninitialized("fw_bot_rank_min", 14);
-    setDvarIfUninitialized("fw_bot_rank_max", 755);
-    setDvarIfUninitialized("fw_bot_prestige_min", 1);
-    setDvarIfUninitialized("fw_bot_prestige_max", 27);
+    setDvarIfUninitialized("fw_bot_rank_min", 1);
+    setDvarIfUninitialized("fw_bot_rank_max", 55);
 
-    level thread watchFrameworkSmartBotBoss();
+    setDvarIfUninitialized("fw_bot_prestige_min", 0);
+    setDvarIfUninitialized("fw_bot_prestige_max", 10);
+
+    setDvarIfUninitialized("fw_bot_aggro_debug", 0);
+
+    setDvarIfUninitialized("fw_bot_stuck_fix", 1);
 }
 
 ////////////////////////////////////////////////////////////////////////
 
-onFrameworkPlayerConnected()
-{
-    self endon("disconnect");
-    level endon("game_ended");
-
-    self thread watchFrameworkSmartBotSpawn();
-}
-
-////////////////////////////////////////////////////////////////////////
-
-watchFrameworkSmartBotSpawn()
-{
-    self endon("disconnect");
-    level endon("game_ended");
-
-    if (!isbot(self))
-        return;
-
-    self initFrameworkSmartBotIdentity();
-
-    for (;;)
-    {
-        self waittill("spawned_player");
-
-        if (getDvarInt("fw_smart_bots") != 1)
-            continue;
-
-        self notify("stop_framework_smartbot_spawn");
-        self thread setupFrameworkSmartBotSpawn();
-    }
-}
-
-////////////////////////////////////////////////////////////////////////
-
-setupFrameworkSmartBotSpawn()
-{
-    self endon("disconnect");
-    self endon("death");
-    self endon("stop_framework_smartbot_spawn");
-    level endon("game_ended");
-
-    wait 0.15;
-
-    if (!isbot(self) || !isAlive(self))
-        return;
-
-    self botsetstance("stand");
-    self botclearscriptgoal();
-    self botclearscriptenemy();
-
-    self.frameworkBotTracking = 0;
-    self.frameworkBotStuck = 0;
-
-    self applyFrameworkSmartBotRank();
-    self applyFrameworkSmartBotDifficulty();
-
-    self notify("stop_framework_bot_jump_shoot");
-    self notify("stop_framework_bot_aggro");
-    self notify("stop_framework_bot_stuck_fix");
-
-    if (getDvarInt("fw_bot_jump_shoot") == 1)
-        self thread frameworkBotJumpShootLoop();
-
-    if (getDvarInt("fw_bot_aggressive") == 1)
-        self thread frameworkBotAggroLoop();
-
-    if (getDvarInt("fw_bot_stuck_fix") == 1)
-        self thread frameworkBotStuckFixLoop();
-}
-
-////////////////////////////////////////////////////////////////////////
-
-initFrameworkSmartBotIdentity()
-{
-    if (!isbot(self))
-        return;
-
-    if (isDefined(self.frameworkBotIdentityReady))
-        return;
-
-    self.frameworkBotIdentityReady = true;
-
-    rankMin = getDvarInt("fw_bot_rank_min");
-    rankMax = getDvarInt("fw_bot_rank_max");
-    prestigeMin = getDvarInt("fw_bot_prestige_min");
-    prestigeMax = getDvarInt("fw_bot_prestige_max");
-
-    if (rankMin < 1)
-        rankMin = 1;
-
-    if (rankMax <= rankMin)
-        rankMax = rankMin + 1;
-
-    if (prestigeMin < 0)
-        prestigeMin = 0;
-
-    if (prestigeMax <= prestigeMin)
-        prestigeMax = prestigeMin + 1;
-
-    self.frameworkBotRank = randomIntRange(rankMin, rankMax);
-    self.frameworkBotPrestige = randomIntRange(prestigeMin, prestigeMax);
-}
-
-////////////////////////////////////////////////////////////////////////
-
-applyFrameworkSmartBotRank()
-{
-    if (!isbot(self))
-        return;
-
-    if (getDvarInt("fw_bot_fake_rank") != 1)
-        return;
-
-    if (!isDefined(self.frameworkBotRank) || !isDefined(self.frameworkBotPrestige))
-        self initFrameworkSmartBotIdentity();
-
-    if (isDefined(self.frameworkBotRank) && isDefined(self.frameworkBotPrestige))
-        self setRank(self.frameworkBotRank, self.frameworkBotPrestige);
-}
-
-////////////////////////////////////////////////////////////////////////
-
-applyFrameworkSmartBotDifficulty()
-{
-    if (!isbot(self))
-        return;
-
-    if (isDefined(self.frameworkBotBoss) && self.frameworkBotBoss)
-    {
-        self scripts\mp\bots\bots_util::bot_set_difficulty("veteran");
-        self botsetdifficultysetting("fireFromHipDist", 150);
-        self botsetdifficultysetting("minInaccuracy", 0.05);
-        self botsetdifficultysetting("maxInaccuracy", 0.20);
-        self botsetdifficultysetting("reactionTime", 50);
-        self botsetdifficultysetting("yawSpeed", 12);
-        self botsetdifficultysetting("pitchSpeed", 12);
-        self botsetdifficultysetting("yawSpeedAds", 12);
-        self botsetdifficultysetting("pitchSpeedAds", 12);
-        self botsetdifficultysetting("meleeReactAllowed", 0);
-        self botsetdifficultysetting("throwKnifeChance", 0.01);
-        self botsetdifficultysetting("minTimeBetweenBursts", 0);
-        return;
-    }
-
-    if (getDvarInt("fw_bot_realistic_difficulty") == 1)
-    {
-        self scripts\mp\bots\bots_util::bot_set_difficulty("hardened");
-        self botsetdifficultysetting("fireFromHipDist", 150);
-        self botsetdifficultysetting("minInaccuracy", 0.25);
-        self botsetdifficultysetting("maxInaccuracy", 0.75);
-        self botsetdifficultysetting("reactionTime", 150);
-        self botsetdifficultysetting("yawSpeed", 8);
-        self botsetdifficultysetting("pitchSpeed", 8);
-        self botsetdifficultysetting("yawSpeedAds", 8);
-        self botsetdifficultysetting("pitchSpeedAds", 8);
-        self botsetdifficultysetting("meleeReactAllowed", 0);
-        self botsetdifficultysetting("throwKnifeChance", 0.01);
-        self botsetdifficultysetting("minTimeBetweenBursts", 0);
-        return;
-    }
-
-    difficulty = getDvar("fw_bot_difficulty");
-
-    if (!isDefined(difficulty) || difficulty == "")
-        difficulty = "regular";
-
-    self scripts\mp\bots\bots_util::bot_set_difficulty(difficulty);
-}
-
-////////////////////////////////////////////////////////////////////////
-
-watchFrameworkSmartBotBoss()
+watchSmartBots()
 {
     level endon("game_ended");
 
     for (;;)
     {
-        wait 5.0;
-
-        if (getDvarInt("fw_smart_bots") != 1 || getDvarInt("fw_bot_boss") != 1)
-            continue;
-
-        bossExists = 0;
-
         foreach (player in level.players)
         {
-            if (isDefined(player) && isbot(player) && isDefined(player.frameworkBotBoss) && player.frameworkBotBoss)
+            if (!isDefined(player))
+                continue;
+
+            if (!isbot(player))
+                continue;
+
+            if (!isDefined(player.frameworkSmartBotInit))
             {
-                bossExists = 1;
-                break;
+                player.frameworkSmartBotInit = true;
+                player thread setupSmartBot();
             }
-        }
-
-        if (bossExists)
-            continue;
-
-        bots = [];
-
-        foreach (player in level.players)
-        {
-            if (isDefined(player) && isbot(player))
-                bots[bots.size] = player;
-        }
-
-        if (bots.size <= 0)
-            continue;
-
-        chosen = bots[randomInt(bots.size)];
-
-        if (isDefined(chosen))
-            chosen thread turnFrameworkBotIntoBoss();
-    }
-}
-
-////////////////////////////////////////////////////////////////////////
-
-turnFrameworkBotIntoBoss()
-{
-    self endon("disconnect");
-    self endon("death");
-    level endon("game_ended");
-
-    if (!isbot(self))
-        return;
-
-    self.frameworkBotBoss = 1;
-    self.frameworkBotRank = 1055;
-    self.frameworkBotPrestige = 29;
-
-    self applyFrameworkSmartBotRank();
-    self applyFrameworkSmartBotDifficulty();
-}
-
-////////////////////////////////////////////////////////////////////////
-
-frameworkBotJumpShootLoop()
-{
-    self endon("disconnect");
-    self endon("death");
-    self endon("stop_framework_bot_jump_shoot");
-    level endon("game_ended");
-
-    for (;;)
-    {
-        self waittill("weapon_fired");
-
-        if (getDvarInt("fw_smart_bots") != 1 || getDvarInt("fw_bot_jump_shoot") != 1)
-            continue;
-
-        if (randomInt(100) < 25)
-        {
-            self botpressbutton("jump");
-            wait randomFloatRange(0.5, 1.5);
-        }
-
-        if (randomInt(100) < 15)
-        {
-            self botsetstance("crouch");
-            wait randomFloatRange(0.15, 0.25);
-            self botsetstance("stand");
-            wait randomFloatRange(0.15, 0.25);
-            self botsetstance("crouch");
-            wait randomFloatRange(0.15, 0.25);
-            self botsetstance("stand");
-            wait randomFloatRange(0.5, 1.5);
-        }
-
-        if (randomInt(100) < 5)
-        {
-            self botsetstance("prone");
-            wait randomFloatRange(0.25, 1.5);
-            self botsetstance("stand");
-            wait 0.25;
-            self botpressbutton("jump");
-            wait randomFloatRange(0.5, 1.5);
-        }
-    }
-}
-
-////////////////////////////////////////////////////////////////////////
-
-frameworkBotAggroLoop()
-{
-    self endon("disconnect");
-    self endon("death");
-    self endon("stop_framework_bot_aggro");
-    level endon("game_ended");
-
-    self.frameworkBotTracking = 0;
-
-    for (;;)
-    {
-        if (getDvarInt("fw_smart_bots") != 1 || getDvarInt("fw_bot_aggressive") != 1)
-        {
-            self frameworkBotAggroOff();
-            wait 1.0;
-            continue;
-        }
-
-        target = self findFrameworkSmartBotTarget();
-
-        if (!isDefined(target) || !isAlive(target))
-        {
-            self frameworkBotAggroOff();
-            wait 1.0;
-            continue;
-        }
-
-        shouldTrack = 1;
-
-        if (getDvarInt("fw_bot_aggressive_interval") == 1)
-        {
-            phase = int(getTime() / 1000) % 25;
-
-            if (phase >= 15)
-                shouldTrack = 0;
-        }
-
-        if (shouldTrack)
-        {
-            if (!isDefined(self.frameworkBotTracking) || !self.frameworkBotTracking)
-            {
-                self.frameworkBotTracking = 1;
-
-                if (getDvarInt("fw_bot_aggro_debug") == 1)
-                    target iprintln(level.prefix + "^5[BOTS]^7 » ^1Smart bots tracked your position");
-            }
-
-            self botsetflag("force_sprint", 1);
-            self botsetflag("frozen", 0);
-            self freezecontrols(0);
-            self.ignoreall = 0;
-            self getenemyinfo(target);
-            self botgetimperfectenemyinfo(target, target.origin);
-            self botsetscriptgoal(target.origin, 64, "critical");
-            self botsetattacker(target);
-        }
-        else
-        {
-            self frameworkBotAggroOff();
         }
 
         wait 1.0;
@@ -444,190 +87,138 @@ frameworkBotAggroLoop()
 
 ////////////////////////////////////////////////////////////////////////
 
-frameworkBotAggroOff()
+setupSmartBot()
 {
-    self.frameworkBotTracking = 0;
-    self botsetflag("force_sprint", 0);
-    self botclearscriptgoal();
-    self botclearscriptenemy();
+    self endon("disconnect");
+    level endon("game_ended");
 
-    if (isDefined(self.enemy))
-        self.enemy = undefined;
+    self.frameworkFakeRank = randomIntRange(
+        getDvarInt("fw_bot_rank_min"),
+        getDvarInt("fw_bot_rank_max") + 1
+    );
 
-    if (isDefined(self.attacker))
-        self.attacker = undefined;
+    self.frameworkFakePrestige = randomIntRange(
+        getDvarInt("fw_bot_prestige_min"),
+        getDvarInt("fw_bot_prestige_max") + 1
+    );
+
+    if (getDvarInt("fw_bot_boss") == 1)
+        self thread frameworkBossBotLoop();
+
+    if (getDvarInt("fw_bot_stuck_fix") == 1)
+        self thread frameworkSafeBotResetLoop();
+
+    if (getDvarInt("fw_bot_aggro_debug") == 1)
+        self thread frameworkBotDebugLoop();
 }
 
 ////////////////////////////////////////////////////////////////////////
 
-findFrameworkSmartBotTarget()
-{
-    bestTarget = undefined;
-    bestScore = -999999;
-
-    foreach (candidate in level.players)
-    {
-        if (!isDefined(candidate))
-            continue;
-
-        if (candidate == self)
-            continue;
-
-        if (!isAlive(candidate))
-            continue;
-
-        if (isDefined(level.teambased) && level.teambased && isDefined(self.team) && isDefined(candidate.team) && self.team == candidate.team)
-            continue;
-
-        dist = distance(self.origin, candidate.origin);
-        score = 10000 - dist;
-
-        if (isTrue(candidate.inlaststand) || isTrue(candidate.laststand))
-            score -= 8000;
-
-        if (isDefined(self.bot_last_attacker) && candidate == self.bot_last_attacker)
-        {
-            if (getTime() - self.bot_last_attack_time < 3000)
-                score += 3000;
-        }
-
-        if (isbot(candidate))
-            score -= 500;
-
-        if (score > bestScore)
-        {
-            bestScore = score;
-            bestTarget = candidate;
-        }
-    }
-
-    return bestTarget;
-}
-
-////////////////////////////////////////////////////////////////////////
-
-frameworkBotStuckFixLoop()
+// Safe boss bot system
+frameworkBossBotLoop()
 {
     self endon("disconnect");
     self endon("death");
-    self endon("stop_framework_bot_stuck_fix");
     level endon("game_ended");
 
-    wait 5.0;
-
-    lastOrigin = self.origin;
-    strikes = 0;
-    self.frameworkBotStuck = 0;
+    self.maxhealth = 350;
+    self.health = self.maxhealth;
 
     for (;;)
     {
-        wait 8.0;
+        if (!isAlive(self))
+            return;
 
-        if (getDvarInt("fw_smart_bots") != 1 || getDvarInt("fw_bot_stuck_fix") != 1)
+        if (self.health < self.maxhealth)
+            self.health += 2;
+
+        if (self.health > self.maxhealth)
+            self.health = self.maxhealth;
+
+        wait 0.25;
+    }
+}
+
+////////////////////////////////////////////////////////////////////////
+
+// Safe stuck reset
+//
+// No nav calls.
+// No script-goal calls.
+frameworkSafeBotResetLoop()
+{
+    self endon("disconnect");
+    self endon("death");
+    level endon("game_ended");
+
+    lastOrigin = self.origin;
+    stuckTime = 0;
+
+    for (;;)
+    {
+        wait 3.0;
+
+        if (!isAlive(self))
             continue;
 
-        if (!isAlive(self) || !self isOnGround() || isTrue(self.inlaststand) || isTrue(self.laststand))
-        {
-            lastOrigin = self.origin;
-            strikes = 0;
-            self.frameworkBotStuck = 0;
-            continue;
-        }
-
-        dist = distance(self.origin, lastOrigin);
+        dist = distance(lastOrigin, self.origin);
 
         if (dist < 25)
+            stuckTime++;
+        else
+            stuckTime = 0;
+
+        if (stuckTime >= 3)
         {
-            strikes++;
-            self.frameworkBotStuck = 1;
+            teammate = undefined;
 
-            if (strikes >= 3)
+            foreach (player in level.players)
             {
-                self frameworkSmartBotScatterTeleport()
-{
-    if (!isDefined(self) || !isAlive(self))
-        return;
+                if (!isDefined(player))
+                    continue;
 
-    // Safe stuck recovery.
-    // The old version used botGetClosestNavigablePoint(), which can throw
-    // DEV ERROR 1681 on some maps / states. This fallback avoids risky nav
-    // queries and only resets bot behavior toward a valid player anchor.
+                if (!isAlive(player))
+                    continue;
 
-    self botclearscriptgoal();
-    self botclearscriptenemy();
-    self botsetflag("force_sprint", 0);
-    self botsetstance("stand");
+                if (!isbot(player))
+                {
+                    teammate = player;
+                    break;
+                }
+            }
 
-    anchor = getFrameworkRandomHumanPlayer();
+            if (isDefined(teammate))
+            {
+                self setOrigin(teammate.origin + (0, 0, 20));
+            }
 
-    if (!isDefined(anchor))
-        anchor = self getFrameworkAliveTeammate();
+            stuckTime = 0;
+        }
 
-    if (isDefined(anchor) && isDefined(anchor.origin))
-    {
-        self botsetscriptgoal(anchor.origin, 256, "critical");
-        wait 0.15;
-        self botsetflag("force_sprint", 1);
+        lastOrigin = self.origin;
     }
-
-    if (randomInt(100) < 50)
-        self botpressbutton("jump");
 }
 
 ////////////////////////////////////////////////////////////////////////
 
-getFrameworkRandomHumanPlayer()
+// Safe debug loop
+frameworkBotDebugLoop()
 {
-    humans = [];
+    self endon("disconnect");
+    level endon("game_ended");
 
-    foreach (player in level.players)
+    for (;;)
     {
-        if (!isDefined(player))
+        wait 10.0;
+
+        if (!isAlive(self))
             continue;
 
-        if (!isAlive(player))
-            continue;
-
-        if (isbot(player))
-            continue;
-
-        humans[humans.size] = player;
+        iprintln(
+            "^5[SMARTBOT]^7 " +
+            self.name +
+            " ^7• Rank: ^2" + self.frameworkFakeRank +
+            " ^7• Prestige: ^3" + self.frameworkFakePrestige
+        );
     }
-
-    if (humans.size <= 0)
-        return undefined;
-
-    return humans[randomInt(humans.size)];
-}
-
-////////////////////////////////////////////////////////////////////////
-
-getFrameworkAliveTeammate()
-{
-    teammates = [];
-
-    foreach (player in level.players)
-    {
-        if (!isDefined(player))
-            continue;
-
-        if (player == self)
-            continue;
-
-        if (!isAlive(player))
-            continue;
-
-        if (!isDefined(self.team) || !isDefined(player.team))
-            continue;
-
-        if (self.team != player.team)
-            continue;
-
-        teammates[teammates.size] = player;
-    }
-
-    if (teammates.size <= 0)
-        return undefined;
-
-    return teammates[randomInt(teammates.size)];
 }
