@@ -2,26 +2,72 @@
 
 **187 — FRAMEWORK** is a modular GSC framework built for clean project structure, easier maintenance, and long-term expansion.
 
-The framework separates reusable systems from framework-owned systems so features can be added, tested, and reworked without turning the project into one large monolithic script.
+The framework separates reusable gameplay systems, addon systems, engine wrappers, data handling, and framework-owned logic so features can be added, tested, replaced, or expanded without turning the project into one large monolithic script.
 
-This project is designed as a long-term base for future gameplay systems, balance changes, custom progression, addon tools, and framework-owned logic.
-
+This project is designed as a long-term base for:
+- gameplay systems
+- progression systems
+- addon tools
+- movement utilities
+- bot behavior systems
+- framework-owned mechanics
+- future persistence backends
+- reusable MW2019 scripting utilities
 
 ---
 
-## Current Release
+# Current Release
+
+## Smart Bot Update — v1.8
+
+This release expands the framework with a dedicated smart bot behavior layer while keeping the project structure clean, modular, and framework-owned.
 
 ### Included in v1.8
-- added `framework/sources/core/data.gsc` as the framework data layer
-- added save/load ownership for SR, kills, and deaths
+- added `framework/sources/gameplay/smartbots.gsc` as a dedicated smart bot module
+- added randomized bot rank and prestige metadata
+- added jump/crouch/prone behavior while bots are firing
+- added stuck-bot recovery helper
+- kept bot behavior isolated from `core/addons.gsc`
+- preserved the framework-owned addon layer under `framework/sources/core/addons.gsc`
+- kept `core/data.gsc` as the framework data layer
+- kept save/load ownership for SR, kills, and deaths
 - separated match-stat reset behavior from rank/SR handling
-- cleaned `framework.gsc` player lifecycle and spawn debug flow
 - kept restart persistence backend-ready without hardcoding storage into gameplay files
-- cleaned `engine.gsc` ammo helper comments and risky clip-channel notes
-- kept addon DVAR systems under `framework/sources/core/addons.gsc`
+- continued cleanup of risky engine-facing helper ownership
 
-### Bounce System v1.0 - introduces the first framework-owned bounce utility system.
+---
 
+# Smart Bot System
+
+The framework now includes a dedicated smart bot behavior module:
+
+```text
+framework/sources/gameplay/smartbots.gsc
+```
+
+The smart bot system adds lightweight behavior improvements while avoiding unstable bot-native calls that can cause script runtime errors on some builds.
+
+### Included
+- randomized bot rank metadata
+- randomized bot prestige metadata
+- jump behavior while firing
+- crouch behavior while firing
+- prone behavior while firing
+- stuck-bot recovery helper
+- isolated gameplay module ownership
+
+### Notes
+The smart bot system is intentionally kept safe and lightweight.
+
+Risky bot-native systems such as forced nav goals, forced attackers, and internal bot AI state forcing are avoided to keep the framework stable.
+
+---
+
+# Bounce System v1.0
+
+The framework includes the first framework-owned bounce utility system.
+
+### Included
 - runtime bounce creation
 - runtime bounce deletion
 - bounce clearing
@@ -31,14 +77,43 @@ This project is designed as a long-term base for future gameplay systems, balanc
 - configurable marker model handling
 - movement utility experimentation through framework-owned addon systems
 
-### Saving Status
-The current data layer supports runtime/session-style data handling and is structured for future persistence backends.
+---
 
-True restart-safe rank saving is still backend-dependent. If a stronger player-stat or external storage backend is added later, only `core/data.gsc` should need to change.
+# Saving / Data System
+
+The framework includes a dedicated data layer through:
+
+```text
+framework/sources/core/data.gsc
+```
+
+### Current State
+The current save system is structured as an abstraction layer so the rest of the framework does not need to know how data is stored.
+
+At the moment, it handles:
+- `frameworkSR`
+- `frameworkKills`
+- `frameworkDeaths`
+
+### What it does now
+- loads framework player data on connect/spawn
+- saves framework player data after rank/stat changes
+- separates match-stat reset from rank/SR handling
+- keeps save/load ownership isolated in one file for future upgrades
+
+### Persistence Status
+The current implementation is a runtime/session fallback structure, not a fully proven restart-safe storage backend.
+
+That means:
+- runtime/session handling is supported
+- the framework structure is ready for future persistence work
+- true restart-safe rank saving will require a stronger backend if the current build does not expose proper persistent stat functions
+
+When a better storage backend is found later, only `core/data.gsc` should need to change.
 
 ---
 
-## Project Structure
+# Project Structure
 
 ```text
 custom_scripts/
@@ -54,25 +129,46 @@ custom_scripts/
         └── gameplay/
             ├── perks.gsc
             ├── rewards.gsc
+            ├── smartbots.gsc
             ├── stim.gsc
             └── weapons.gsc
 ```
 
-### Ownership
-- `framework.gsc` → main bootstrap and player lifecycle
-- `core/addons.gsc` → framework-owned addon systems and addon DVAR watchers
-- `core/data.gsc` → framework data load/save abstraction
-- `core/engine.gsc` → engine-facing wrappers and risky helper calls
-- `core/shared.gsc` → shared helpers and generic framework utilities
-- `core/ui.gsc` → framework printing and UI helpers
-- `gameplay/*` → reusable gameplay systems
+---
+
+# Ownership
+
+### `framework.gsc`
+Main framework bootstrap and player lifecycle ownership.
+
+### `core/addons.gsc`
+Framework-owned addon systems, DVAR watchers, movement tools, debug systems, and runtime addon ownership.
+
+### `core/data.gsc`
+Framework save/load abstraction layer and progression ownership.
+
+### `core/engine.gsc`
+Engine-facing wrappers, risky helper calls, ammo helpers, equipment helpers, and isolated engine interaction.
+
+### `core/shared.gsc`
+Shared framework utilities and reusable helpers.
+
+### `core/ui.gsc`
+Framework printing and UI utility ownership.
+
+### `gameplay/smartbots.gsc`
+Framework-owned smart bot behavior layer.
+
+### `gameplay/*`
+Reusable gameplay systems isolated from engine and persistence ownership.
 
 ---
 
-## Console DVAR Commands
+# Console DVAR Commands
 
 ```commands
 fw_nohud
+
 fw_bot_team autoassign
 fw_bot_team allies
 fw_bot_team axis
@@ -108,55 +204,25 @@ fw_bounce_radius
 fw_bounce_min_fall_speed
 fw_bounce_marker
 fw_bounce_marker_model
-
 ```
 
 ---
 
-## Saving / Data System
-
-The framework now includes a dedicated data layer through `framework/sources/core/data.gsc`.
-
-### Current State
-The current save system is structured as an abstraction layer so the rest of the framework does not need to know how data is stored.
-
-At the moment, it handles:
-- `frameworkSR`
-- `frameworkKills`
-- `frameworkDeaths`
-
-### What it does now
-- loads framework player data on connect/spawn
-- saves framework player data after rank/stat changes
-- separates match-stat reset from rank/SR handling
-- keeps save/load ownership isolated in one file for future upgrades
-
-### Important Note
-The current implementation is a runtime/session fallback structure, not a fully proven restart-safe storage backend.
-
-That means:
-- runtime/session handling is supported
-- the framework structure is ready for future persistence work
-- true restart-safe rank saving will require a stronger backend if the current build does not expose proper persistent stat functions
-
-### Why this matters
-When a better storage backend is found later, only `core/data.gsc` should need to change, while the rest of the framework can continue using the same save/load flow.
-
----
-
-## Notes
+# Notes
 
 - `fw_nohud` is handled through the addon layer with a per-player watcher model.
-- bot controls are fully DVAR-driven.
+- bot controls are DVAR-driven.
+- smart bot behavior is isolated inside `gameplay/smartbots.gsc`.
 - stim boost configuration is owned by the addon layer.
 - infinite ammo supports weapon refill handling and framework equipment refill support.
+- bounce tools support visible marker spawning and configurable marker models.
 - `data.gsc` provides a clean save-load abstraction layer for future persistence work.
 - `fw_status` prints a quick framework state readout in-game.
 - `fw_debug` is a foundation toggle for future debug-only systems.
 
 ---
 
-## Direction
+# Direction
 
 The current direction of **187 — FRAMEWORK** is:
 
@@ -166,18 +232,7 @@ The current direction of **187 — FRAMEWORK** is:
 - reusable gameplay modules
 - stable DVAR-driven control
 - cleaner combat and engine helper separation
+- safer bot behavior expansion
 - future-ready data and progression structure
 
 This release is intended as a cleaner and stronger base for continued framework development.
-
-
-## Smart Bot System — v1.8
-
-Added `framework/sources/gameplay/smartbots.gsc` as a framework-owned bot behavior layer.
-
-### Included
-- randomized bot rank/prestige display support
-- Realistic difficulty tuning
-- jump/crouch/prone behavior while firing
-- stuck-bot recovery helper
-- fully isolated gameplay module under `gameplay/smartbots.gsc`
