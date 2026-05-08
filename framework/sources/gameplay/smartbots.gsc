@@ -6,219 +6,371 @@
 
 ////////////////////////////////////////////////////////////////////////
 
-// Smart Bot System — Safe Baseline
+// Framework smart bot systems — fixed v1.8.2
 //
-// Stable v1.8.2 version
-//
-// Removed risky native bot calls:
-// - botpressbutton
-// - botsetstance
-// - bot_set_difficulty
-// - setRank
-// - botsetflag
-// - botsetscriptgoal
-// - botsetattacker
-// - botGetClosestNavigablePoint
-//
-// Safe systems retained:
-// - boss bot support
+// Keeps:
+// - jump while shooting
+// - crouch/prone while shooting
 // - fake rank metadata
-// - safe stuck reset
-// - aggro debug
-// - framework-owned DVAR handling
+// - boss identity metadata
+// - stuck fix
+//
+// Removed risky 1681 calls:
+// - setRank()
+// - bot_set_difficulty()
+// - botsetflag()
+// - botclearscriptgoal()
+// - botclearscriptenemy()
 
 ////////////////////////////////////////////////////////////////////////
 
 init()
 {
-    level endon("game_ended");
+    if (isDefined(level.frameworkSmartBotsReady))
+        return;
 
-    initSmartBotDvars();
+    level.frameworkSmartBotsReady = true;
 
-    level thread watchSmartBots();
-}
-
-////////////////////////////////////////////////////////////////////////
-
-initSmartBotDvars()
-{
     setDvarIfUninitialized("fw_smart_bots", 1);
-
-    setDvarIfUninitialized("fw_bot_boss", 0);
-
-    setDvarIfUninitialized("fw_bot_fake_rank", 1);
-    setDvarIfUninitialized("fw_bot_rank_min", 1);
-    setDvarIfUninitialized("fw_bot_rank_max", 55);
-
-    setDvarIfUninitialized("fw_bot_prestige_min", 0);
-    setDvarIfUninitialized("fw_bot_prestige_max", 10);
-
+    setDvarIfUninitialized("fw_bot_jump_shoot", 1);
+    setDvarIfUninitialized("fw_bot_aggressive", 0);
+    setDvarIfUninitialized("fw_bot_aggressive_interval", 0);
     setDvarIfUninitialized("fw_bot_aggro_debug", 0);
-
     setDvarIfUninitialized("fw_bot_stuck_fix", 1);
+    setDvarIfUninitialized("fw_bot_boss", 0);
+    setDvarIfUninitialized("fw_bot_fake_rank", 1);
+    setDvarIfUninitialized("fw_bot_rank_min", 14);
+    setDvarIfUninitialized("fw_bot_rank_max", 755);
+    setDvarIfUninitialized("fw_bot_prestige_min", 1);
+    setDvarIfUninitialized("fw_bot_prestige_max", 27);
+
+    level thread watchFrameworkSmartBotBoss();
 }
 
 ////////////////////////////////////////////////////////////////////////
 
-watchSmartBots()
+onFrameworkPlayerConnected()
 {
+    self endon("disconnect");
     level endon("game_ended");
+
+    if (!isbot(self))
+        return;
+
+    self initFrameworkSmartBotIdentity();
+    self thread watchFrameworkSmartBotSpawn();
+}
+
+////////////////////////////////////////////////////////////////////////
+
+watchFrameworkSmartBotSpawn()
+{
+    self endon("disconnect");
+    level endon("game_ended");
+
+    if (!isbot(self))
+        return;
 
     for (;;)
     {
-        foreach (player in level.players)
-        {
-            if (!isDefined(player))
-                continue;
+        self waittill("spawned_player");
 
-            if (!isbot(player))
-                continue;
+        self notify("stop_framework_smartbot_spawn");
+        self notify("stop_framework_bot_jump_shoot");
+        self notify("stop_framework_bot_stuck_fix");
+        self notify("stop_framework_bot_aggression_safe");
 
-            if (!isDefined(player.frameworkSmartBotInit))
-            {
-                player.frameworkSmartBotInit = true;
-                player thread setupSmartBot();
-            }
-        }
+        if (getDvarInt("fw_smart_bots") != 1)
+            continue;
 
-        wait 1.0;
+        self thread setupFrameworkSmartBotSpawn();
     }
 }
 
 ////////////////////////////////////////////////////////////////////////
 
-setupSmartBot()
+setupFrameworkSmartBotSpawn()
 {
     self endon("disconnect");
+    self endon("death");
+    self endon("stop_framework_smartbot_spawn");
     level endon("game_ended");
 
-    self.frameworkFakeRank = randomIntRange(
-        getDvarInt("fw_bot_rank_min"),
-        getDvarInt("fw_bot_rank_max") + 1
-    );
+    wait 0.25;
 
-    self.frameworkFakePrestige = randomIntRange(
-        getDvarInt("fw_bot_prestige_min"),
-        getDvarInt("fw_bot_prestige_max") + 1
-    );
+    if (!isbot(self) || !isAlive(self))
+        return;
 
-    if (getDvarInt("fw_bot_boss") == 1)
-        self thread frameworkBossBotLoop();
+    self frameworkSmartBotSafeReset();
+    self applyFrameworkSmartBotRank();
+
+    if (getDvarInt("fw_bot_jump_shoot") == 1)
+        self thread frameworkBotJumpShootLoop();
 
     if (getDvarInt("fw_bot_stuck_fix") == 1)
-        self thread frameworkSafeBotResetLoop();
+        self thread frameworkBotStuckFixLoop();
 
-    if (getDvarInt("fw_bot_aggro_debug") == 1)
-        self thread frameworkBotDebugLoop();
+    if (getDvarInt("fw_bot_aggressive") == 1)
+        self thread frameworkBotAggressionSafeLoop();
 }
 
 ////////////////////////////////////////////////////////////////////////
 
-// Safe boss bot system
-frameworkBossBotLoop()
+frameworkSmartBotSafeReset()
+{
+    if (!isDefined(self) || !isbot(self))
+        return;
+
+    self.frameworkBotTracking = 0;
+    self.frameworkBotStuck = 0;
+}
+
+////////////////////////////////////////////////////////////////////////
+
+initFrameworkSmartBotIdentity()
+{
+    if (!isbot(self))
+        return;
+
+    if (isDefined(self.frameworkBotIdentityReady))
+        return;
+
+    self.frameworkBotIdentityReady = true;
+
+    rankMin = getDvarInt("fw_bot_rank_min");
+    rankMax = getDvarInt("fw_bot_rank_max");
+    prestigeMin = getDvarInt("fw_bot_prestige_min");
+    prestigeMax = getDvarInt("fw_bot_prestige_max");
+
+    if (rankMin < 1)
+        rankMin = 1;
+
+    if (rankMax <= rankMin)
+        rankMax = rankMin + 1;
+
+    if (prestigeMin < 0)
+        prestigeMin = 0;
+
+    if (prestigeMax <= prestigeMin)
+        prestigeMax = prestigeMin + 1;
+
+    self.frameworkBotRank = randomIntRange(rankMin, rankMax);
+    self.frameworkBotPrestige = randomIntRange(prestigeMin, prestigeMax);
+}
+
+////////////////////////////////////////////////////////////////////////
+
+applyFrameworkSmartBotRank()
+{
+    if (!isbot(self))
+        return;
+
+    if (getDvarInt("fw_bot_fake_rank") != 1)
+        return;
+
+    if (!isDefined(self.frameworkBotRank) || !isDefined(self.frameworkBotPrestige))
+        self initFrameworkSmartBotIdentity();
+
+    // Metadata only.
+    // Real setRank() removed because it can throw DEV ERROR 1681.
+}
+
+////////////////////////////////////////////////////////////////////////
+
+watchFrameworkSmartBotBoss()
+{
+    level endon("game_ended");
+
+    for (;;)
+    {
+        wait 5.0;
+
+        if (getDvarInt("fw_smart_bots") != 1 || getDvarInt("fw_bot_boss") != 1)
+            continue;
+
+        bossExists = 0;
+
+        foreach (player in level.players)
+        {
+            if (isDefined(player) && isbot(player) && isDefined(player.frameworkBotBoss) && player.frameworkBotBoss)
+            {
+                bossExists = 1;
+                break;
+            }
+        }
+
+        if (bossExists)
+            continue;
+
+        bots = [];
+
+        foreach (player in level.players)
+        {
+            if (isDefined(player) && isbot(player) && isAlive(player))
+                bots[bots.size] = player;
+        }
+
+        if (bots.size <= 0)
+            continue;
+
+        chosen = bots[randomInt(bots.size)];
+
+        if (isDefined(chosen))
+            chosen thread turnFrameworkBotIntoBoss();
+    }
+}
+
+////////////////////////////////////////////////////////////////////////
+
+turnFrameworkBotIntoBoss()
 {
     self endon("disconnect");
     self endon("death");
     level endon("game_ended");
 
-    self.maxhealth = 350;
-    self.health = self.maxhealth;
+    if (!isbot(self))
+        return;
+
+    self.frameworkBotBoss = 1;
+    self.frameworkBotRank = 1055;
+    self.frameworkBotPrestige = 29;
+
+    self.maxhealth = 500;
+    self.health = 500;
+
+    self applyFrameworkSmartBotRank();
+}
+
+////////////////////////////////////////////////////////////////////////
+
+frameworkBotJumpShootLoop()
+{
+    self endon("disconnect");
+    self endon("death");
+    self endon("stop_framework_bot_jump_shoot");
+    level endon("game_ended");
 
     for (;;)
     {
+        self waittill("weapon_fired");
+
+        if (getDvarInt("fw_smart_bots") != 1 || getDvarInt("fw_bot_jump_shoot") != 1)
+            continue;
+
         if (!isAlive(self))
             return;
 
-        if (self.health < self.maxhealth)
-            self.health += 2;
+        roll = randomInt(100);
 
-        if (self.health > self.maxhealth)
-            self.health = self.maxhealth;
+        if (roll < 25)
+        {
+            self botpressbutton("jump");
+            wait randomFloatRange(0.35, 0.85);
+            continue;
+        }
 
-        wait 0.25;
+        if (roll < 40)
+        {
+            self botsetstance("crouch");
+            wait randomFloatRange(0.15, 0.25);
+            self botsetstance("stand");
+            wait randomFloatRange(0.25, 0.65);
+            continue;
+        }
+
+        if (roll < 45)
+        {
+            self botsetstance("prone");
+            wait randomFloatRange(0.25, 0.75);
+            self botsetstance("stand");
+        }
     }
 }
 
 ////////////////////////////////////////////////////////////////////////
 
-// Safe stuck reset
-//
-// No nav calls.
-// No script-goal calls.
-frameworkSafeBotResetLoop()
+frameworkBotAggressionSafeLoop()
 {
     self endon("disconnect");
     self endon("death");
+    self endon("stop_framework_bot_aggression_safe");
     level endon("game_ended");
 
-    lastOrigin = self.origin;
-    stuckTime = 0;
+    lastPrint = 0;
 
     for (;;)
     {
-        wait 3.0;
+        if (getDvarInt("fw_smart_bots") != 1 || getDvarInt("fw_bot_aggressive") != 1)
+        {
+            wait 1.0;
+            continue;
+        }
 
         if (!isAlive(self))
-            continue;
+            return;
 
-        dist = distance(lastOrigin, self.origin);
+        if (randomInt(100) < 10)
+            self botpressbutton("jump");
 
-        if (dist < 25)
-            stuckTime++;
-        else
-            stuckTime = 0;
-
-        if (stuckTime >= 3)
+        if (getDvarInt("fw_bot_aggro_debug") == 1 && getTime() - lastPrint > 5000)
         {
-            teammate = undefined;
+            lastPrint = getTime();
 
             foreach (player in level.players)
             {
-                if (!isDefined(player))
-                    continue;
-
-                if (!isAlive(player))
-                    continue;
-
-                if (!isbot(player))
-                {
-                    teammate = player;
-                    break;
-                }
+                if (isDefined(player) && !isbot(player) && isAlive(player))
+                    player iprintln(level.prefix + "^5[BOTS]^7 » ^2Safe aggression active");
             }
-
-            if (isDefined(teammate))
-            {
-                self setOrigin(teammate.origin + (0, 0, 20));
-            }
-
-            stuckTime = 0;
         }
 
-        lastOrigin = self.origin;
+        if (getDvarInt("fw_bot_aggressive_interval") == 1)
+            wait 2.5;
+        else
+            wait 0.75;
     }
 }
 
 ////////////////////////////////////////////////////////////////////////
 
-// Safe debug loop
-frameworkBotDebugLoop()
+frameworkBotStuckFixLoop()
 {
     self endon("disconnect");
+    self endon("death");
+    self endon("stop_framework_bot_stuck_fix");
     level endon("game_ended");
+
+    wait 5.0;
+
+    lastOrigin = self.origin;
+    strikes = 0;
 
     for (;;)
     {
-        wait 10.0;
+        wait 8.0;
 
-        if (!isAlive(self))
+        if (getDvarInt("fw_smart_bots") != 1 || getDvarInt("fw_bot_stuck_fix") != 1)
             continue;
 
-        iprintln(
-            "^5[SMARTBOT]^7 " +
-            self.name +
-            " ^7• Rank: ^2" + self.frameworkFakeRank +
-            " ^7• Prestige: ^3" + self.frameworkFakePrestige
-        );
+        if (!isAlive(self))
+            return;
+
+        dist = distance(self.origin, lastOrigin);
+
+        if (dist < 25)
+            strikes++;
+        else
+            strikes = 0;
+
+        if (strikes >= 3)
+        {
+            self frameworkSmartBotSafeReset();
+
+            if (randomInt(100) < 50)
+                self botpressbutton("jump");
+
+            strikes = 0;
+        }
+
+        lastOrigin = self.origin;
     }
 }

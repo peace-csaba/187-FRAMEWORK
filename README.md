@@ -175,28 +175,9 @@ This release is intended as a cleaner and stronger base for continued framework 
 
 Added `framework/sources/gameplay/smartbots.gsc` as a framework-owned bot behavior layer.
 
-### Smart Bot DVARs
-```commands
-fw_smart_bots
-fw_bot_jump_shoot
-fw_bot_aggressive
-fw_bot_aggressive_interval
-fw_bot_aggro_debug
-fw_bot_stuck_fix
-fw_bot_realistic_difficulty
-fw_bot_boss
-fw_bot_fake_rank
-fw_bot_rank_min
-fw_bot_rank_max
-fw_bot_prestige_min
-fw_bot_prestige_max
-```
-
 ### Included
 - randomized bot rank/prestige display support
-- optional realistic difficulty tuning
-- optional aggressive tracking behavior
+- Realistic difficulty tuning
 - jump/crouch/prone behavior while firing
 - stuck-bot recovery helper
-- optional random boss bot upgrade
 - fully isolated gameplay module under `gameplay/smartbots.gsc`
