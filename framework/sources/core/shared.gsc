@@ -55,7 +55,7 @@ isAlivePlayer(player)
 // Plate reward gate
 canUsePlateRewards()
 {
-    return isFrameworkSupportedMode() && isWarzone() && level.fwcfg_plates;
+    return isFrameworkSupportedMode() && isWarzone() && level.enablePlateRewards;
 }
 
 ////////////////////////////////////////////////////////////////////////

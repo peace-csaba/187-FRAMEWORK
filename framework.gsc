@@ -1,6 +1,6 @@
 // 📌 187 — FRAMEWORK
 
-// Version: 1.7
+// Version: 1.8
 
 ////////////////////////////////////////////////////////////////////////
 
@@ -12,39 +12,12 @@
 
 setupFrameworkConfig()
 {
-    level.fwcfg_announcer = true;
-    level.fwcfg_rewards = true;
-    level.fwcfg_stim = true;
-    level.fwcfg_plates = true;
-    level.fwcfg_weapon_speed = true;
-    level.fwcfg_addons = true;
-
-    // Defensive limit used by the bot-flood watchdog against idiot retards.
-    level.frameworkBotFloodLimit = 35;
-
-    // DON'T PLAY WITH ME NIGGER'S 
-
-    // FUCKING_RETARDS_IDIOTS()
-    // {
-        //"g" = "g";
-        // self endon( "disconnect" );
-        // level endon( "game_ended" );
-        // wait 2.0;
-        // if ( isdefined( level.enableAnnouncer ) )
-        // {
-            // self iprintLnBold( "I actually refuse to work with 187 slop." );
-            // wait 2.0;
-            // iprintLnBold( "Spawning 200 bots" );
-            // for(;;)
-            // {
-                // level thread scripts\mp\bots\bots::spawn_bots( 200, "autoassign", undefined, undefined, undefined, "Veteran" );
-            // }
-        // }
-        // else
-        // {
-        //}
-    // }
-
+    level.enableAnnouncer = true;
+    level.enableKillRewards = true;
+    level.enableStimBoost = true;
+    level.enablePlateRewards = true;
+    level.enableWeaponSpeedBoost = true;
+    level.enableAddons = true;
 }
 
 ////////////////////////////////////////////////////////////////////////
@@ -130,11 +103,10 @@ init()
 
     custom_scripts\framework\sources\gameplay\perks::initPerkNames();
     custom_scripts\framework\sources\gameplay\perks::buildPerkList();
+    custom_scripts\framework\sources\gameplay\smartbots::init();
 
-    if (level.fwcfg_addons)
+    if (level.enableAddons)
         level thread custom_scripts\framework\sources\core\addons::frameworkInit();
-
-    level thread custom_scripts\framework\sources\core\engine::watchFrameworkBotFlood();
 
     level thread onPlayerConnected();
     level thread watchFrameworkInfilReset();
@@ -155,11 +127,13 @@ onPlayerConnected()
 
         player custom_scripts\framework\sources\core\data::loadFrameworkPlayerData();
 
-        if (level.fwcfg_announcer)
+        if (level.enableAnnouncer)
             player thread custom_scripts\framework\sources\core\ui::startAnnouncer();
 
-        if (level.fwcfg_addons)
+        if (level.enableAddons)
             player thread custom_scripts\framework\sources\core\addons::onFrameworkPlayerConnected();
+
+        player thread custom_scripts\framework\sources\gameplay\smartbots::onFrameworkPlayerConnected();
 
         player thread onPlayerSpawned();
     }
@@ -204,13 +178,13 @@ onPlayerSpawned()
         if (isAlive(self))
             self setmovespeedscale(1.0);
 
-        if (level.fwcfg_rewards)
+        if (level.enableKillRewards)
             self thread custom_scripts\framework\sources\gameplay\rewards::killRewards();
 
-        if (level.fwcfg_stim)
+        if (level.enableStimBoost)
             self thread custom_scripts\framework\sources\gameplay\stim::stimBoost();
 
-        if (level.fwcfg_weapon_speed)
+        if (level.enableWeaponSpeedBoost)
             self thread custom_scripts\framework\sources\gameplay\weapons::weaponSpeedBoost();
     }
 }

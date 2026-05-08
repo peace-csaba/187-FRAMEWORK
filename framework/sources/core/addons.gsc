@@ -172,12 +172,6 @@ initFrameworkAddonDvars()
     // military_skyhook_depballoon_backpack
     // offhand_wm_deployable_cover
     // trophy_system_mp_explode
-    // br_plunder_extraction_delivery_rope
-    // uk_tool_box_small_01
-    // offhand_wm_briefcase_bomb
-    // military_hq_crate_02_payload
-    // weapon_wm_mg_mobile_turret
-    // x2_military_old_recon_station
 
     level.frameworkLastAddBot = 0;
     level.frameworkLastKickBot = 0;

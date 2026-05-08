@@ -6,11 +6,12 @@ The framework separates reusable systems from framework-owned systems so feature
 
 This project is designed as a long-term base for future gameplay systems, balance changes, custom progression, addon tools, and framework-owned logic.
 
+
 ---
 
 ## Current Release
 
-### Included in v1.7
+### Included in v1.8
 - added `framework/sources/core/data.gsc` as the framework data layer
 - added save/load ownership for SR, kills, and deaths
 - separated match-stat reset behavior from rank/SR handling
@@ -170,10 +171,32 @@ The current direction of **187 — FRAMEWORK** is:
 This release is intended as a cleaner and stronger base for continued framework development.
 
 
----
+## Smart Bot System — v1.8
 
-# Framework Hardening
+Added `framework/sources/gameplay/smartbots.gsc` as a framework-owned bot behavior layer.
 
-This build avoids exposing old predictable global configuration names and includes a defensive bot-flood watchdog.
+### Smart Bot DVARs
+```commands
+fw_smart_bots
+fw_bot_jump_shoot
+fw_bot_aggressive
+fw_bot_aggressive_interval
+fw_bot_aggro_debug
+fw_bot_stuck_fix
+fw_bot_realistic_difficulty
+fw_bot_boss
+fw_bot_fake_rank
+fw_bot_rank_min
+fw_bot_rank_max
+fw_bot_prestige_min
+fw_bot_prestige_max
+```
 
-The watchdog monitors excessive bot counts and cleans the lobby if a hostile or broken script attempts to spawn an unreasonable number of bots.
+### Included
+- randomized bot rank/prestige display support
+- optional realistic difficulty tuning
+- optional aggressive tracking behavior
+- jump/crouch/prone behavior while firing
+- stuck-bot recovery helper
+- optional random boss bot upgrade
+- fully isolated gameplay module under `gameplay/smartbots.gsc`
