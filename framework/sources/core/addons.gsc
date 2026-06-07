@@ -30,15 +30,6 @@
 // - fw_noclip_speed
 // - fw_noclip_sprint_speed
 
-// - fw_bounce_spawn
-// - fw_bounce_delete
-// - fw_bounce_clear
-// - fw_bounce_bind
-// - fw_bounce_radius
-// - fw_bounce_min_fall_speed
-// - fw_bounce_marker
-// - fw_bounce_marker_model
-
 main()
 {
     // Framework-owned, intentionally left empty.
@@ -69,8 +60,6 @@ onFrameworkPlayerConnected()
     self thread watchFrameworkInfiniteAmmoDvar();
     self thread watchFrameworkNoRecoilDvar();
     self thread watchFrameworkNoClipDvar();
-    self thread watchFrameworkBounceDvars();
-    self thread watchFrameworkBounceMonitor();
     self thread watchFrameworkStatusDvar();
     self thread frameworkAddonPlayerRuntime();
 }
@@ -89,7 +78,7 @@ frameworkAddonPlayerRuntime()
         self waittill("spawned_player");
 
         if (isbot(self))
-            return;
+            continue;
 
         self notify("stop_framework_addon_runtime");
         self thread handleFrameworkAddonSpawn();
@@ -147,38 +136,9 @@ initFrameworkAddonDvars()
     setDvarIfUninitialized("fw_status", 0);
 
     // Noclip
-    setDvarIfUninitialized("fw_noclip", 0);
     setDvarIfUninitialized("fw_noclip_bind", 1);
     setDvarIfUninitialized("fw_noclip_speed", 33);
     setDvarIfUninitialized("fw_noclip_sprint_speed", 80);
-
-    // Bounce
-    setDvarIfUninitialized("fw_bounce_spawn", 0);
-    setDvarIfUninitialized("fw_bounce_delete", 0);
-    setDvarIfUninitialized("fw_bounce_clear", 0);
-    setDvarIfUninitialized("fw_bounce_bind", 0);
-    setDvarIfUninitialized("fw_bounce_actionslot", 3);
-    setDvarIfUninitialized("fw_bounce_radius", 90);
-    setDvarIfUninitialized("fw_bounce_min_fall_speed", -250);
-    setDvarIfUninitialized("fw_bounce_marker", 1);
-    setDvarIfUninitialized("fw_bounce_marker_model", "military_crate_large_stackable_01_dummy");
-
-    //Models found in engine:
-    // prop_flag_neutral
-    // military_crate_field_upgrade_01
-    // military_crate_large_stackable_01_dummy
-    // veh8_mil_air_acharlie130
-    // veh8_mil_lnd_bromeo_parachute
-    // veh8_mil_air_acharlie130_ks_carrier
-    // military_skyhook_depballoon_backpack
-    // offhand_wm_deployable_cover
-    // trophy_system_mp_explode
-    // br_plunder_extraction_delivery_rope
-    // uk_tool_box_small_01
-    // offhand_wm_briefcase_bomb
-    // military_hq_crate_02_payload
-    // weapon_wm_mg_mobile_turret
-    // x2_military_old_recon_station
 
     level.frameworkLastAddBot = 0;
     level.frameworkLastKickBot = 0;
@@ -660,413 +620,6 @@ frameworkNoRecoilLoop()
 }
 
 
-////////////////////////////////////////////////////////////////////////
-
-// =====================================================
-// MOVEMENT / BOUNCE
-// =====================================================
-
-ensureFrameworkBounceStorage()
-{
-    if (!isDefined(self.frameworkBouncePositions))
-        self.frameworkBouncePositions = [];
-
-    if (!isDefined(self.frameworkBounceMarkers))
-        self.frameworkBounceMarkers = [];
-
-    if (!isDefined(self.frameworkLastBounceRadius))
-        self.frameworkLastBounceRadius = getDvarFloat("fw_bounce_radius");
-
-    if (!isDefined(self.frameworkLastBounceMinFallSpeed))
-        self.frameworkLastBounceMinFallSpeed = getDvarFloat("fw_bounce_min_fall_speed");
-
-    if (!isDefined(self.frameworkLastBounceMarkerState))
-        self.frameworkLastBounceMarkerState = getDvarInt("fw_bounce_marker");
-
-    if (!isDefined(self.frameworkLastBounceMarkerModel))
-        self.frameworkLastBounceMarkerModel = getDvar("fw_bounce_marker_model");
-
-    if (!isDefined(self.frameworkLastBounceBindState))
-        self.frameworkLastBounceBindState = -1;
-
-    if (!isDefined(self.frameworkLastBounceActionSlot))
-        self.frameworkLastBounceActionSlot = -1;
-}
-
-////////////////////////////////////////////////////////////////////////
-
-watchFrameworkBounceDvars()
-{
-    self endon("disconnect");
-    level endon("game_ended");
-
-    self ensureFrameworkBounceStorage();
-
-    for (;;)
-    {
-        spawnValue = getDvarInt("fw_bounce_spawn");
-        deleteValue = getDvarInt("fw_bounce_delete");
-        clearValue = getDvarInt("fw_bounce_clear");
-        bindValue = getDvarInt("fw_bounce_bind");
-        actionSlot = getDvarInt("fw_bounce_actionslot");
-        radiusValue = getDvarFloat("fw_bounce_radius");
-        minFallValue = getDvarFloat("fw_bounce_min_fall_speed");
-        markerValue = getDvarInt("fw_bounce_marker");
-        markerModel = getDvar("fw_bounce_marker_model");
-
-        if (spawnValue < 0)
-        {
-            spawnValue = 0;
-            setDvar("fw_bounce_spawn", "0");
-        }
-
-        if (deleteValue < 0)
-        {
-            deleteValue = 0;
-            setDvar("fw_bounce_delete", "0");
-        }
-
-        if (clearValue != 0 && clearValue != 1)
-        {
-            clearValue = 0;
-            setDvar("fw_bounce_clear", "0");
-        }
-
-        if (bindValue != 0 && bindValue != 1)
-        {
-            bindValue = 0;
-            setDvar("fw_bounce_bind", "0");
-        }
-
-        if (actionSlot < 2 || actionSlot > 4)
-        {
-            actionSlot = 3;
-            setDvar("fw_bounce_actionslot", "3");
-        }
-
-        if (!isDefined(radiusValue) || radiusValue <= 0)
-        {
-            radiusValue = 90;
-            setDvar("fw_bounce_radius", "90");
-        }
-
-        if (!isDefined(minFallValue) || minFallValue >= 0)
-        {
-            minFallValue = -250;
-            setDvar("fw_bounce_min_fall_speed", "-250");
-        }
-
-        if (markerValue != 0 && markerValue != 1)
-        {
-            markerValue = 1;
-            setDvar("fw_bounce_marker", "1");
-        }
-
-        if (!isDefined(markerModel) || markerModel == "")
-        {
-            markerModel = "military_crate_large_stackable_01_dummy";
-            setDvar("fw_bounce_marker_model", markerModel);
-        }
-
-        if (radiusValue != self.frameworkLastBounceRadius)
-        {
-            self.frameworkLastBounceRadius = radiusValue;
-            self iprintln(level.prefix + "^6[BOUNCE]^7 » ^3Radius:^7 ^3" + radiusValue);
-        }
-
-        if (minFallValue != self.frameworkLastBounceMinFallSpeed)
-        {
-            self.frameworkLastBounceMinFallSpeed = minFallValue;
-            self iprintln(level.prefix + "^6[BOUNCE]^7 » ^1Min Fall Speed:^7 ^1" + minFallValue);
-        }
-
-        if (markerValue != self.frameworkLastBounceMarkerState)
-        {
-            self.frameworkLastBounceMarkerState = markerValue;
-
-            if (markerValue == 1)
-            {
-                self refreshFrameworkBounceMarkers();
-                self iprintln(level.prefix + "^6[BOUNCE]^7 » ^2Markers enabled");
-            }
-            else
-            {
-                self deleteFrameworkBounceMarkers();
-                self iprintln(level.prefix + "^6[BOUNCE]^7 » ^1Markers disabled");
-            }
-        }
-
-        if (markerModel != self.frameworkLastBounceMarkerModel)
-        {
-            self.frameworkLastBounceMarkerModel = markerModel;
-
-            if (markerValue == 1)
-                self refreshFrameworkBounceMarkers();
-
-            self iprintln(level.prefix + "^6[BOUNCE]^7 » ^5Marker Model:^7 ^5" + markerModel);
-        }
-
-        if (bindValue != self.frameworkLastBounceBindState || actionSlot != self.frameworkLastBounceActionSlot)
-        {
-            self.frameworkLastBounceBindState = bindValue;
-            self.frameworkLastBounceActionSlot = actionSlot;
-            self notify("stop_framework_bounce_bind");
-
-            if (bindValue == 1)
-            {
-                self thread frameworkBounceBindLoop(actionSlot);
-                self iprintln(level.prefix + "^6[BOUNCE]^7 » ^2Bind:^7 actionslot ^5" + actionSlot);
-            }
-            else
-                self iprintln(level.prefix + "^6[BOUNCE]^7 » ^1Bind disabled");
-        }
-
-        if (spawnValue > 0)
-        {
-            for (i = 0; i < spawnValue; i++)
-                self addFrameworkBouncePoint();
-
-            setDvar("fw_bounce_spawn", "0");
-        }
-
-        if (deleteValue > 0)
-        {
-            for (i = 0; i < deleteValue; i++)
-                self deleteFrameworkBouncePoint();
-
-            setDvar("fw_bounce_delete", "0");
-        }
-
-        if (clearValue == 1)
-        {
-            self clearFrameworkBouncePoints();
-            setDvar("fw_bounce_clear", "0");
-        }
-
-        wait 0.1;
-    }
-}
-
-////////////////////////////////////////////////////////////////////////
-
-addFrameworkBouncePoint()
-{
-    self ensureFrameworkBounceStorage();
-
-    pos = self getOrigin();
-    self.frameworkBouncePositions[self.frameworkBouncePositions.size] = pos;
-
-    marker = undefined;
-
-    if (getDvarInt("fw_bounce_marker") == 1)
-        marker = self spawnFrameworkBounceMarker(pos);
-
-    self.frameworkBounceMarkers[self.frameworkBounceMarkers.size] = marker;
-
-    count = self.frameworkBouncePositions.size;
-    self iprintln(level.prefix + "^6[BOUNCE]^7 » ^2Point #" + count + " saved ^7@ ^5" + pos);
-}
-
-////////////////////////////////////////////////////////////////////////
-
-deleteFrameworkBouncePoint()
-{
-    self ensureFrameworkBounceStorage();
-
-    count = self.frameworkBouncePositions.size;
-
-    if (count <= 0)
-    {
-        self iprintln(level.prefix + "^6[BOUNCE]^7 » ^1No points to delete");
-        return;
-    }
-
-    markerCount = self.frameworkBounceMarkers.size;
-
-    if (markerCount >= count)
-    {
-        marker = self.frameworkBounceMarkers[count - 1];
-
-        if (isDefined(marker))
-            marker delete();
-    }
-
-    newPositions = [];
-    newMarkers = [];
-
-    for (i = 0; i < count - 1; i++)
-        newPositions[newPositions.size] = self.frameworkBouncePositions[i];
-
-    for (i = 0; i < markerCount - 1; i++)
-        newMarkers[newMarkers.size] = self.frameworkBounceMarkers[i];
-
-    self.frameworkBouncePositions = newPositions;
-    self.frameworkBounceMarkers = newMarkers;
-
-    self iprintln(level.prefix + "^6[BOUNCE]^7 » ^1Deleted point #" + count);
-}
-
-////////////////////////////////////////////////////////////////////////
-
-clearFrameworkBouncePoints()
-{
-    self ensureFrameworkBounceStorage();
-    self deleteFrameworkBounceMarkers();
-
-    self.frameworkBouncePositions = [];
-    self.frameworkBounceMarkers = [];
-
-    self iprintln(level.prefix + "^6[BOUNCE]^7 » ^1All points cleared");
-}
-
-////////////////////////////////////////////////////////////////////////
-
-spawnFrameworkBounceMarker(pos)
-{
-    if (!isDefined(pos))
-        return undefined;
-
-    modelName = getDvar("fw_bounce_marker_model");
-
-    if (!isDefined(modelName) || modelName == "")
-        modelName = "military_crate_large_stackable_01_dummy";
-
-    marker = spawn("script_model", pos);
-
-    if (!isDefined(marker))
-        return undefined;
-
-    marker setModel(modelName);
-    marker.angles = (0, 0, 0);
-
-    return marker;
-}
-
-////////////////////////////////////////////////////////////////////////
-
-deleteFrameworkBounceMarkers()
-{
-    if (!isDefined(self.frameworkBounceMarkers))
-        return;
-
-    foreach (marker in self.frameworkBounceMarkers)
-    {
-        if (isDefined(marker))
-            marker delete();
-    }
-
-    self.frameworkBounceMarkers = [];
-}
-
-////////////////////////////////////////////////////////////////////////
-
-refreshFrameworkBounceMarkers()
-{
-    self ensureFrameworkBounceStorage();
-    self deleteFrameworkBounceMarkers();
-
-    if (getDvarInt("fw_bounce_marker") != 1)
-        return;
-
-    foreach (pos in self.frameworkBouncePositions)
-    {
-        marker = self spawnFrameworkBounceMarker(pos);
-        self.frameworkBounceMarkers[self.frameworkBounceMarkers.size] = marker;
-    }
-}
-
-////////////////////////////////////////////////////////////////////////
-
-frameworkBounceBindLoop(actionSlot)
-{
-    self endon("disconnect");
-    self endon("stop_framework_bounce_bind");
-    level endon("game_ended");
-
-    if (!isDefined(actionSlot) || actionSlot < 2 || actionSlot > 4)
-        actionSlot = 3;
-
-    for (;;)
-    {
-        self waittill("+actionslot " + int(actionSlot));
-        self applyFrameworkBounceVelocity();
-    }
-}
-
-////////////////////////////////////////////////////////////////////////
-
-watchFrameworkBounceMonitor()
-{
-    self endon("disconnect");
-    level endon("game_ended");
-
-    self ensureFrameworkBounceStorage();
-
-    for (;;)
-    {
-        if (isDefined(self) && isAlive(self))
-            self checkFrameworkBouncePoints();
-
-        wait 0.05;
-    }
-}
-
-////////////////////////////////////////////////////////////////////////
-
-checkFrameworkBouncePoints()
-{
-    self ensureFrameworkBounceStorage();
-
-    if (self.frameworkBouncePositions.size <= 0)
-        return;
-
-    radius = getDvarFloat("fw_bounce_radius");
-    minFallSpeed = getDvarFloat("fw_bounce_min_fall_speed");
-
-    if (!isDefined(radius) || radius <= 0)
-    {
-        radius = 90;
-        setDvar("fw_bounce_radius", "90");
-    }
-
-    if (!isDefined(minFallSpeed) || minFallSpeed >= 0)
-    {
-        minFallSpeed = -250;
-        setDvar("fw_bounce_min_fall_speed", "-250");
-    }
-
-    velocity = self getVelocity();
-
-    if (velocity[2] >= minFallSpeed)
-        return;
-
-    foreach (bouncePos in self.frameworkBouncePositions)
-    {
-        if (!isDefined(bouncePos))
-            continue;
-
-        if (distance(self getOrigin(), bouncePos) < radius)
-        {
-            self applyFrameworkBounceVelocity();
-            wait 0.2;
-            return;
-        }
-    }
-}
-
-////////////////////////////////////////////////////////////////////////
-
-applyFrameworkBounceVelocity()
-{
-    if (!isDefined(self) || !isAlive(self))
-        return;
-
-    velocity = self getVelocity();
-    self setVelocity(velocity - (0, 0, velocity[2] * 2));
-}
-
-////////////////////////////////////////////////////////////////////////
-
 // =====================================================
 // DEBUG / STATUS
 // =====================================================
@@ -1138,13 +691,9 @@ watchFrameworkStatusDvar()
 
 printFrameworkStatus()
 {
-    sr = 250;
     kills = 0;
     deaths = 0;
     streak = 0;
-
-    if (isDefined(self.frameworkSR))
-        sr = self.frameworkSR;
 
     if (isDefined(self.frameworkKills))
         kills = self.frameworkKills;
@@ -1159,25 +708,22 @@ printFrameworkStatus()
     infAmmo = getDvarInt("fw_inf_ammo");
     noRecoil = getDvarInt("fw_no_recoil");
     debugValue = getDvarInt("fw_debug");
-    noclip = getDvarInt("fw_noclip");
-    noclipBind = getDvarInt("fw_noclip_bind");
-    bounceCount = 0;
+    noclip = 0;
 
-    if (isDefined(self.frameworkBouncePositions))
-        bounceCount = self.frameworkBouncePositions.size;
+    if (isDefined(self.frameworkNoClipActive) && self.frameworkNoClipActive)
+        noclip = 1;
+
+    noclipBind = getDvarInt("fw_noclip_bind");
 
     stimSpeed = getDvarFloat("fw_stim_boost_speed");
     stimDuration = getDvarInt("fw_stim_boost_duration");
     stimDecay = getDvarFloat("fw_stim_boost_decay");
 
     self iprintln(level.prefix + "^5[STATUS]^7 » ^2187 FRAMEWORK ^7v1.6");
-    self iprintln(level.prefix + "^5[STATUS]^7 » ^5SR:^7 " + sr + " ^7• ^2Kills:^7 " + kills + " ^7• ^1Deaths:^7 " + deaths + " ^7• ^3Streak:^7 " + streak);
+    self iprintln(level.prefix + "^5[STATUS]^7 » ^2Kills:^7 " + kills + " ^7• ^1Deaths:^7 " + deaths + " ^7• ^3Streak:^7 " + streak);
     self iprintln(level.prefix + "^5[STATUS]^7 » ^3NoHUD:^7 " + noHud + " ^7• ^2InfAmmo:^7 " + infAmmo + " ^7• ^2NoRecoil:^7 " + noRecoil + " ^7• ^5Debug:^7 " + debugValue);
     self iprintln(level.prefix + "^5[STATUS]^7 » ^2Stim:^7 speed " + stimSpeed + " ^7/ duration " + stimDuration + " ^7/ decay " + stimDecay);
     self iprintln(level.prefix + "^5[STATUS]^7 » ^5NoClip:^7 " + noclip + " ^7• ^5NoClip Bind:^7 " + noclipBind);
-    self iprintln(level.prefix + "^5[STATUS]^7 » ^6Bounces:^7 " + bounceCount + " ^7• ^6Bounce Bind:^7 " + getDvarInt("fw_bounce_bind"));
-    self iprintln(level.prefix + "^5[STATUS]^7 » ^6Bounce Radius:^7 " + getDvarFloat("fw_bounce_radius") + " ^7• ^6Min Fall:^7 " + getDvarFloat("fw_bounce_min_fall_speed"));
-    self iprintln(level.prefix + "^5[STATUS]^7 » ^6Bounce Marker:^7 " + getDvarInt("fw_bounce_marker") + " ^7• ^6Model:^7 " + getDvar("fw_bounce_marker_model"));
 }
 
 ////////////////////////////////////////////////////////////////////////
@@ -1185,6 +731,14 @@ printFrameworkStatus()
 // =====================================================
 // NOCLIP
 // =====================================================
+//
+// Per-player noclip.
+//
+// Important:
+// - fw_noclip is NOT used as a global enable toggle.
+// - Toggle is per-player only with Melee + Jump when fw_noclip_bind is enabled.
+// - Bots are blocked.
+// - Uses the same anchor-based movement as the last working version.
 
 watchFrameworkNoClipDvar()
 {
@@ -1192,37 +746,22 @@ watchFrameworkNoClipDvar()
     self endon("stop_framework_noclip");
     level endon("game_ended");
 
+    if (isbot(self))
+        return;
+
     self.frameworkNoClipActive = false;
     self.frameworkNoClipAnchor = undefined;
-    self.frameworkLastNoClipDvar = -1;
     self.frameworkLastNoClipBindDvar = -1;
     self.frameworkLastNoClipToggleTime = 0;
 
     for (;;)
     {
-        noclipValue = getDvarInt("fw_noclip");
         bindValue = getDvarInt("fw_noclip_bind");
-
-        if (noclipValue != 0 && noclipValue != 1)
-        {
-            noclipValue = 0;
-            setDvar("fw_noclip", "0");
-        }
 
         if (bindValue != 0 && bindValue != 1)
         {
             bindValue = 1;
             setDvar("fw_noclip_bind", "1");
-        }
-
-        if (noclipValue != self.frameworkLastNoClipDvar)
-        {
-            self.frameworkLastNoClipDvar = noclipValue;
-
-            if (noclipValue == 1)
-                self enableFrameworkNoClip();
-            else
-                self disableFrameworkNoClip();
         }
 
         if (bindValue != self.frameworkLastNoClipBindDvar)
@@ -1252,6 +791,9 @@ handleFrameworkNoClipBind()
     if (!isDefined(self) || !isAlive(self))
         return;
 
+    if (isbot(self))
+        return;
+
     if (!self meleeButtonPressed())
         return;
 
@@ -1266,9 +808,9 @@ handleFrameworkNoClipBind()
     self.frameworkLastNoClipToggleTime = now;
 
     if (isDefined(self.frameworkNoClipActive) && self.frameworkNoClipActive)
-        setDvar("fw_noclip", "0");
+        self disableFrameworkNoClip();
     else
-        setDvar("fw_noclip", "1");
+        self enableFrameworkNoClip();
 
     wait 0.2;
 }
@@ -1278,6 +820,9 @@ handleFrameworkNoClipBind()
 enableFrameworkNoClip()
 {
     if (!isDefined(self) || !isAlive(self))
+        return;
+
+    if (isbot(self))
         return;
 
     if (isDefined(self.frameworkNoClipActive) && self.frameworkNoClipActive)
@@ -1324,6 +869,12 @@ disableFrameworkNoClip()
 updateFrameworkNoClipMovement()
 {
     if (!isDefined(self) || !isAlive(self))
+    {
+        self disableFrameworkNoClip();
+        return;
+    }
+
+    if (isbot(self))
     {
         self disableFrameworkNoClip();
         return;

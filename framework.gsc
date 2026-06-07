@@ -1,6 +1,6 @@
 // 📌 187 — FRAMEWORK
 
-// Version: 1.8.2
+// Version: 1.8.5
 
 ////////////////////////////////////////////////////////////////////////
 
@@ -16,7 +16,6 @@ setupFrameworkConfig()
     level.enableKillRewards = true;
     level.enableStimBoost = true;
     level.enablePlateRewards = true;
-    level.enableWeaponSpeedBoost = true;
     level.enableAddons = true;
 }
 
@@ -29,8 +28,6 @@ resetFrameworkPlayerStats(player)
 {
     if (!isDefined(player))
         return;
-
-    player.frameworkSR = 250;
     player.frameworkKills = 0;
     player.frameworkDeaths = 0;
     player.killStreak = 0;
@@ -46,8 +43,6 @@ resetFrameworkMatchStats(player)
 {
     if (!isDefined(player))
         return;
-
-    player custom_scripts\framework\sources\core\data::resetFrameworkMatchData();
 }
 
 ////////////////////////////////////////////////////////////////////////
@@ -125,8 +120,6 @@ onPlayerConnected()
         if (!isDefined(player))
             continue;
 
-        player custom_scripts\framework\sources\core\data::loadFrameworkPlayerData();
-
         if (level.enableAnnouncer)
             player thread custom_scripts\framework\sources\core\ui::startAnnouncer();
 
@@ -157,8 +150,6 @@ onPlayerSpawned()
 
         self.stimActive = false;
 
-        self custom_scripts\framework\sources\core\data::loadFrameworkPlayerData();
-
         if (!isDefined(self.frameworkKills))
             self.frameworkKills = 0;
 
@@ -172,7 +163,6 @@ onPlayerSpawned()
             self.specialistActive = false;
 
         wait 0.25;
-        self custom_scripts\framework\sources\core\data::showFrameworkSavedDataDebug();
 
 
         if (isAlive(self))
@@ -183,8 +173,5 @@ onPlayerSpawned()
 
         if (level.enableStimBoost)
             self thread custom_scripts\framework\sources\gameplay\stim::stimBoost();
-
-        if (level.enableWeaponSpeedBoost)
-            self thread custom_scripts\framework\sources\gameplay\weapons::weaponSpeedBoost();
     }
 }

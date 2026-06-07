@@ -6,32 +6,26 @@ The framework separates reusable gameplay systems, addon systems, engine wrapper
 
 This project is designed as a long-term base for:
 - gameplay systems
-- progression systems
-- addon tools
+- - addon tools
 - movement utilities
 - bot behavior systems
 - framework-owned mechanics
-- future persistence backends
-- reusable MW2019 scripting utilities
+- - reusable MW2019 scripting utilities
 
 ---
 
 # Current Release
 
-## Smart Bot Update — v1.8
+## Cleanup Update — v1.8.4.3
 
 This release expands the framework with a dedicated smart bot behavior layer while keeping the project structure clean, modular, and framework-owned.
 
-### Included in v1.8
+### Included in v1.8.4
 - added `framework/sources/gameplay/smartbots.gsc` as a dedicated smart bot module
-- added randomized bot rank and prestige metadata
 - added jump/crouch/prone behavior while bots are firing
 - added stuck-bot recovery helper
 - kept bot behavior isolated from `core/addons.gsc`
 - preserved the framework-owned addon layer under `framework/sources/core/addons.gsc`
-- kept `core/data.gsc` as the framework data layer
-- kept save/load ownership for SR, kills, and deaths
-- separated match-stat reset behavior from rank/SR handling
 - kept restart persistence backend-ready without hardcoding storage into gameplay files
 - continued cleanup of risky engine-facing helper ownership
 
@@ -48,7 +42,6 @@ framework/sources/gameplay/smartbots.gsc
 The smart bot system adds lightweight behavior improvements while avoiding unstable bot-native calls that can cause script runtime errors on some builds.
 
 ### Included
-- randomized bot rank metadata
 - randomized bot prestige metadata
 - jump behavior while firing
 - crouch behavior while firing
@@ -63,42 +56,22 @@ Risky bot-native systems such as forced nav goals, forced attackers, and interna
 
 ---
 
-# Bounce System v1.0
-
-The framework includes the first framework-owned bounce utility system.
-
-### Included
-- runtime bounce creation
-- runtime bounce deletion
-- bounce clearing
-- configurable bounce trigger radius
-- configurable minimum fall-speed handling
-- visible bounce marker spawning
-- configurable marker model handling
-- movement utility experimentation through framework-owned addon systems
-
----
-
 # Saving / Data System
 
 The framework includes a dedicated data layer through:
 
 ```text
-framework/sources/core/data.gsc
 ```
 
 ### Current State
 The current save system is structured as an abstraction layer so the rest of the framework does not need to know how data is stored.
 
 At the moment, it handles:
-- `frameworkSR`
 - `frameworkKills`
 - `frameworkDeaths`
 
 ### What it does now
 - loads framework player data on connect/spawn
-- saves framework player data after rank/stat changes
-- separates match-stat reset from rank/SR handling
 - keeps save/load ownership isolated in one file for future upgrades
 
 ### Persistence Status
@@ -107,9 +80,7 @@ The current implementation is a runtime/session fallback structure, not a fully 
 That means:
 - runtime/session handling is supported
 - the framework structure is ready for future persistence work
-- true restart-safe rank saving will require a stronger backend if the current build does not expose proper persistent stat functions
 
-When a better storage backend is found later, only `core/data.gsc` should need to change.
 
 ---
 
@@ -122,7 +93,6 @@ custom_scripts/
     └── sources/
         ├── core/
         │   ├── addons.gsc
-        │   ├── data.gsc
         │   ├── engine.gsc
         │   ├── shared.gsc
         │   └── ui.gsc
@@ -144,7 +114,6 @@ Main framework bootstrap and player lifecycle ownership.
 ### `core/addons.gsc`
 Framework-owned addon systems, DVAR watchers, movement tools, debug systems, and runtime addon ownership.
 
-### `core/data.gsc`
 Framework save/load abstraction layer and progression ownership.
 
 ### `core/engine.gsc`
@@ -196,14 +165,6 @@ fw_noclip_bind
 fw_noclip_speed
 fw_noclip_sprint_speed
 
-fw_bounce_spawn
-fw_bounce_delete
-fw_bounce_clear
-fw_bounce_bind
-fw_bounce_radius
-fw_bounce_min_fall_speed
-fw_bounce_marker
-fw_bounce_marker_model
 ```
 
 ---
@@ -215,8 +176,6 @@ fw_bounce_marker_model
 - smart bot behavior is isolated inside `gameplay/smartbots.gsc`.
 - stim boost configuration is owned by the addon layer.
 - infinite ammo supports weapon refill handling and framework equipment refill support.
-- bounce tools support visible marker spawning and configurable marker models.
-- `data.gsc` provides a clean save-load abstraction layer for future persistence work.
 - `fw_status` prints a quick framework state readout in-game.
 - `fw_debug` is a foundation toggle for future debug-only systems.
 
@@ -233,6 +192,7 @@ The current direction of **187 — FRAMEWORK** is:
 - stable DVAR-driven control
 - cleaner combat and engine helper separation
 - safer bot behavior expansion
+- per-player noclip ownership
 - future-ready data and progression structure
 
 This release is intended as a cleaner and stronger base for continued framework development.
