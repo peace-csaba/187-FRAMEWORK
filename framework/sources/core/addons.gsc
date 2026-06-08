@@ -50,7 +50,6 @@ frameworkInit()
 
     level thread watchBotDvars();
     level thread watchFrameworkStimDvars();
-    level thread watchFrameworkTimeLimitDvars();
 }
 
 ////////////////////////////////////////////////////////////////////////
