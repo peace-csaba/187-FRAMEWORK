@@ -165,6 +165,10 @@ fw_noclip_bind
 fw_noclip_speed
 fw_noclip_sprint_speed
 
+fw_bot_skin_reroll
+fw_bot_boss
+fw_bot_aggressive
+
 ```
 
 ---
