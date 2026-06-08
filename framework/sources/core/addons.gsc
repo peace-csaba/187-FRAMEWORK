@@ -25,10 +25,6 @@
 // - fw_debug
 // - fw_status
 
-// - fw_time_limit
-// - fw_time_infinite
-// - fw_time_refresh
-
 // - fw_noclip
 // - fw_noclip_bind
 // - fw_noclip_speed
@@ -655,8 +651,6 @@ watchFrameworkStatusDvar()
     {
         statusValue = getDvarInt("fw_status");
         debugValue = getDvarInt("fw_debug");
-        timeInfinite = getDvarInt("fw_time_infinite");
-        timeLimit = getDvarInt("fw_time_limit");
 
         if (statusValue != 0 && statusValue != 1)
         {
@@ -731,7 +725,6 @@ printFrameworkStatus()
     self iprintln(level.prefix + "^5[STATUS]^7 » ^2187 FRAMEWORK ^7v1.6");
     self iprintln(level.prefix + "^5[STATUS]^7 » ^2Kills:^7 " + kills + " ^7• ^1Deaths:^7 " + deaths + " ^7• ^3Streak:^7 " + streak);
     self iprintln(level.prefix + "^5[STATUS]^7 » ^3NoHUD:^7 " + noHud + " ^7• ^2InfAmmo:^7 " + infAmmo + " ^7• ^2NoRecoil:^7 " + noRecoil + " ^7• ^5Debug:^7 " + debugValue);
-    self iprintln(level.prefix + "^5[STATUS]^7 » ^5Time:^7 infinite " + timeInfinite + " ^7• ^5Limit:^7 " + timeLimit + " min");
     self iprintln(level.prefix + "^5[STATUS]^7 » ^2Stim:^7 speed " + stimSpeed + " ^7/ duration " + stimDuration + " ^7/ decay " + stimDecay);
     self iprintln(level.prefix + "^5[STATUS]^7 » ^5NoClip:^7 " + noclip + " ^7• ^5NoClip Bind:^7 " + noclipBind);
 }
