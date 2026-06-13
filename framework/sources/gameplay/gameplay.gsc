@@ -53,7 +53,7 @@ init()
     setdvarifuninitialized( "fw_ring_poi", "prison" );
     setdvarifuninitialized( "fw_ring_timer", "5" );
 
-    setdvarifuninitialized( "fw_matchinfo_interval", "60" );
+    setdvarifuninitialized( "fw_matchinfo_interval", "120" );
     setdvarifuninitialized( "fw_matchinfo_flags", "15" );
     setdvarifuninitialized( "fw_matchinfo_trigger", "0" );
 
@@ -509,7 +509,7 @@ monitorGameplayCommandMessages()
     lastPlayRing = getdvarint( "fw_playring", 1 );
     lastRingPoi = getdvar( "fw_ring_poi", "prison" );
     lastRingTimer = getdvar( "fw_ring_timer", "5" );
-    lastMatchInfoInterval = getdvar( "fw_matchinfo_interval", "60" );
+    lastMatchInfoInterval = getdvar( "fw_matchinfo_interval", "120" );
     lastMatchInfoFlags = getdvar( "fw_matchinfo_flags", "15" );
 
     for (;;)
@@ -572,7 +572,7 @@ monitorGameplayCommandMessages()
             {
                 if ( isdefined( player ) && !isbot( player ) )
                     player custom_scripts\framework\sources\core\ui::prefixPrint( "^2Current Play Area is ^7" + currentPoiName + "^2." );
-                    player custom_scripts\framework\sources\core\ui::prefixPrintBold( "^2Current Play Area is ^7" + currentPoiName + "^2." );
+            }
         }
 
         currentRingTimer = getdvar( "fw_ring_timer", "5" );
@@ -584,11 +584,10 @@ monitorGameplayCommandMessages()
             {
                 if ( isdefined( player ) && !isbot( player ) )
                     player custom_scripts\framework\sources\core\ui::prefixPrint( "^5[PLAY AREA]^7 » ^3Return Timer:^7 " + currentRingTimer + "s" );
-                    player custom_scripts\framework\sources\core\ui::prefixPrintBold( "^5[PLAY AREA]^7 » ^3Return Timer:^7 " + currentRingTimer + "s" );
             }
         }
 
-        currentMatchInfoInterval = getdvar( "fw_matchinfo_interval", "60" );
+        currentMatchInfoInterval = getdvar( "fw_matchinfo_interval", "120" );
         if ( currentMatchInfoInterval != lastMatchInfoInterval )
         {
             lastMatchInfoInterval = currentMatchInfoInterval;
@@ -597,7 +596,6 @@ monitorGameplayCommandMessages()
             {
                 if ( isdefined( player ) && !isbot( player ) )
                     player custom_scripts\framework\sources\core\ui::prefixPrint( "^5[MATCH INFO]^7 » ^3Interval:^7 " + currentMatchInfoInterval + "s" );
-                    player custom_scripts\framework\sources\core\ui::prefixPrintBold( "^5[MATCH INFO]^7 » ^3Interval:^7 " + currentMatchInfoInterval + "s" );
             }
         }
 
@@ -610,7 +608,6 @@ monitorGameplayCommandMessages()
             {
                 if ( isdefined( player ) && !isbot( player ) )
                     player custom_scripts\framework\sources\core\ui::prefixPrint( "^5[MATCH INFO]^7 » ^3Flags:^7 " + currentMatchInfoFlags );
-                    player custom_scripts\framework\sources\core\ui::prefixPrintBold( "^5[MATCH INFO]^7 » ^3Flags:^7 " + currentMatchInfoFlags );
             }
         }
     }
