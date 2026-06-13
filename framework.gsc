@@ -1,6 +1,6 @@
 // 📌 187 — FRAMEWORK
 
-// Version: 1.8.7
+// Version: 1.8.6
 
 ////////////////////////////////////////////////////////////////////////
 
@@ -17,7 +17,6 @@ setupFrameworkConfig()
     level.enableStimBoost = true;
     level.enablePlateRewards = true;
     level.enableAddons = true;
-    level.enableBetterPlunder = true;
 }
 
 ////////////////////////////////////////////////////////////////////////
@@ -29,8 +28,6 @@ resetFrameworkPlayerStats(player)
 {
     if (!isDefined(player))
         return;
-
-    player.frameworkSR = 250;
     player.frameworkKills = 0;
     player.frameworkDeaths = 0;
     player.killStreak = 0;
@@ -46,8 +43,6 @@ resetFrameworkMatchStats(player)
 {
     if (!isDefined(player))
         return;
-
-    player custom_scripts\framework\sources\core\data::resetFrameworkMatchData();
 }
 
 ////////////////////////////////////////////////////////////////////////
@@ -105,9 +100,6 @@ init()
     custom_scripts\framework\sources\gameplay\perks::buildPerkList();
     custom_scripts\framework\sources\gameplay\smartbots::init();
 
-    if (level.enableBetterPlunder)
-        level thread custom_scripts\framework\sources\gameplay\betterplunder::init();
-
     if (level.enableAddons)
         level thread custom_scripts\framework\sources\core\addons::frameworkInit();
 
@@ -128,8 +120,6 @@ onPlayerConnected()
         if (!isDefined(player))
             continue;
 
-        player custom_scripts\framework\sources\core\data::loadFrameworkPlayerData();
-
         if (level.enableAnnouncer)
             player thread custom_scripts\framework\sources\core\ui::startAnnouncer();
 
@@ -137,9 +127,6 @@ onPlayerConnected()
             player thread custom_scripts\framework\sources\core\addons::onFrameworkPlayerConnected();
 
         player thread custom_scripts\framework\sources\gameplay\smartbots::onFrameworkPlayerConnected();
-
-        if (level.enableBetterPlunder)
-            player thread custom_scripts\framework\sources\gameplay\betterplunder::onFrameworkPlayerConnected();
 
         player thread onPlayerSpawned();
     }
@@ -163,8 +150,6 @@ onPlayerSpawned()
 
         self.stimActive = false;
 
-        self custom_scripts\framework\sources\core\data::loadFrameworkPlayerData();
-
         if (!isDefined(self.frameworkKills))
             self.frameworkKills = 0;
 
@@ -178,7 +163,6 @@ onPlayerSpawned()
             self.specialistActive = false;
 
         wait 0.25;
-        self custom_scripts\framework\sources\core\data::showFrameworkSavedDataDebug();
 
 
         if (isAlive(self))

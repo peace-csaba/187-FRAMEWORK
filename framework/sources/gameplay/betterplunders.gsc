@@ -6,9 +6,14 @@
 
 ////////////////////////////////////////////////////////////////////////
 
+////////////////////////////////////////////////////////////////////////
+
+
 // Better Plunder — framework-owned gameplay module
 //
 // Reworked from betterplunder.gsc into the 187 FRAMEWORK structure.
+// do not steal my specialist code retards, you guys are AI slops ya'll.
+// fuck you, this is why laura left, dont play with me.
 //
 // Goals:
 // - Plunder/DMZ rule control
@@ -25,6 +30,39 @@
 // - risky cleanup/super systems are DVAR-gated
 
 ////////////////////////////////////////////////////////////////////////
+
+bp187Prefix()
+{
+    if (isDefined(level.prefix))
+        return level.prefix;
+
+    return "^7[^5187^7]^7 » ";
+}
+
+////////////////////////////////////////////////////////////////////////
+
+bp187Print(tag, msg)
+{
+    self iprintln(bp187Prefix() + "^5[" + tag + "]^7 » " + msg);
+}
+
+////////////////////////////////////////////////////////////////////////
+
+bp187PrintBold(tag, msg)
+{
+    self iprintlnbold(bp187Prefix() + "^5[" + tag + "]^7 » " + msg);
+}
+
+////////////////////////////////////////////////////////////////////////
+
+bp187Broadcast(tag, msg)
+{
+    foreach (player in level.players)
+    {
+        if (isDefined(player) && !isbot(player))
+            player iprintln(bp187Prefix() + "^5[" + tag + "]^7 » " + msg);
+    }
+}
 
 init()
 {
@@ -315,7 +353,7 @@ betterPlunderHandleRewardPerks()
     if (allowSpecialist == 1 && self.bp_total_kills > maxPerks)
     {
         self.bp_has_specialist = 1;
-        self iprintlnbold("^2Specialist Bonus Received!");
+        self bp187PrintBold("PLUNDER", "^2Specialist Bonus Received!");
         self thread betterPlunderGiveSpecialistBonus();
         return;
     }
@@ -392,7 +430,7 @@ betterPlunderGiveRandomRewardPerk()
 
     self.bp_earned_perks[self.bp_earned_perks.size] = chosen;
 
-    self iprintlnbold("^3STREAK:^7 Bonus Perk Acquired!");
+    self bp187PrintBold("PLUNDER", "^3STREAK:^7 Bonus Perk Acquired!");
     self playsoundtoplayer("ui_select_purchase_confirm", self);
 }
 
@@ -526,7 +564,7 @@ betterPlunderRingActivationWatcher()
     {
         if (isDefined(player) && !isbot(player))
         {
-            player iprintlnbold("^3HOST DEPLOYED:^7 Ring activates in 15 seconds!");
+            player bp187Broadcast("PLUNDER", "^3HOST DEPLOYED:^7 Ring activates in 15 seconds!");
             player playlocalsound("ui_mp_timer_countdown");
         }
     }
@@ -539,7 +577,7 @@ betterPlunderRingActivationWatcher()
     {
         if (isDefined(player) && !isbot(player))
         {
-            player iprintlnbold("^1THE PLAY AREA IS NOW ACTIVE!");
+            player bp187Broadcast("PLUNDER", "^1THE PLAY AREA IS NOW ACTIVE!");
             player playlocalsound("br_circle_closing_warning");
         }
     }
@@ -628,7 +666,7 @@ betterPlunderHandleInsideRing()
     self.bp_is_out_of_bounds = 0;
 
     if (!isbot(self))
-        self iprintlnbold("^2You have returned to the play area.");
+        self bp187PrintBold("PLUNDER", "^2You have returned to the play area.");
 }
 
 ////////////////////////////////////////////////////////////////////////
@@ -650,7 +688,7 @@ betterPlunderOutsideRingCountdown()
     while (isTrue(self.bp_is_out_of_bounds) && isAlive(self))
     {
         timeLeft = maxTime - timeSpent;
-        self iprintlnbold("^1RETURN TO THE PLAY AREA:^7 " + timeLeft + "s");
+        self bp187PrintBold("PLUNDER", "^1RETURN TO THE PLAY AREA:^7 " + timeLeft + "s");
 
         wait 1.0;
         timeSpent++;
@@ -915,7 +953,7 @@ betterPlunderInitialPoiTeleport()
     self setOrigin(teleportPos);
 
     if (!isbot(self))
-        self iprintln("^2The current Play Area is ^7" + name + "^2.");
+        self bp187Print("PLUNDER", "^2The current Play Area is ^7" + name + "^2.");
 }
 
 ////////////////////////////////////////////////////////////////////////

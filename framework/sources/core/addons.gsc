@@ -134,6 +134,9 @@ initFrameworkAddonDvars()
     // Debug / status
     setDvarIfUninitialized("fw_debug", 0);
     setDvarIfUninitialized("fw_status", 0);
+    setDvarIfUninitialized("fw_time_limit", 999);
+    setDvarIfUninitialized("fw_time_infinite", 1);
+    setDvarIfUninitialized("fw_time_refresh", 1);
 
     // Noclip
     setDvarIfUninitialized("fw_noclip_bind", 1);
@@ -691,13 +694,9 @@ watchFrameworkStatusDvar()
 
 printFrameworkStatus()
 {
-    sr = 250;
     kills = 0;
     deaths = 0;
     streak = 0;
-
-    if (isDefined(self.frameworkSR))
-        sr = self.frameworkSR;
 
     if (isDefined(self.frameworkKills))
         kills = self.frameworkKills;
@@ -724,7 +723,7 @@ printFrameworkStatus()
     stimDecay = getDvarFloat("fw_stim_boost_decay");
 
     self iprintln(level.prefix + "^5[STATUS]^7 » ^2187 FRAMEWORK ^7v1.6");
-    self iprintln(level.prefix + "^5[STATUS]^7 » ^5SR:^7 " + sr + " ^7• ^2Kills:^7 " + kills + " ^7• ^1Deaths:^7 " + deaths + " ^7• ^3Streak:^7 " + streak);
+    self iprintln(level.prefix + "^5[STATUS]^7 » ^2Kills:^7 " + kills + " ^7• ^1Deaths:^7 " + deaths + " ^7• ^3Streak:^7 " + streak);
     self iprintln(level.prefix + "^5[STATUS]^7 » ^3NoHUD:^7 " + noHud + " ^7• ^2InfAmmo:^7 " + infAmmo + " ^7• ^2NoRecoil:^7 " + noRecoil + " ^7• ^5Debug:^7 " + debugValue);
     self iprintln(level.prefix + "^5[STATUS]^7 » ^2Stim:^7 speed " + stimSpeed + " ^7/ duration " + stimDuration + " ^7/ decay " + stimDecay);
     self iprintln(level.prefix + "^5[STATUS]^7 » ^5NoClip:^7 " + noclip + " ^7• ^5NoClip Bind:^7 " + noclipBind);
