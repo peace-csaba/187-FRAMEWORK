@@ -173,7 +173,7 @@ fw_noclip_sprint_speed
 
 ## Plunder Update — v1.8.8
 
-This release expands the framework with a dedicated custom plunder gameplay.
+This release expands the framework with a dedicated beta custom plunder gameplay.
 
 ### Included in v1.8.8
 - New File added inside the framework —> gameplay/gameplay.gsc
