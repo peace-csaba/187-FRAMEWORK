@@ -16,31 +16,6 @@ This project is designed as a long-term base for:
 
 ---
 
-# Current Release
-
-## Plunder Update — v1.8.8
-
-This release expands the framework with a dedicated custom plunder gameplay.
-
-### Included in v1.8.8
-- New File added inside the framework —> gameplay/gameplay.gsc
-
-- Added New Dvar for move speed loop. — (fw_movespeed 1.0)
-- Added New Dvar for infinite tactical sprint loop. — (fw_inftacsprint 0)
-
-- Added & Fixed center coordinates for the configured play areas poi.
--  —> (fw_ring_poi prison) — (control, factory, bio, tents) !!!
--  —> Added new Handles for play areas activation after host deploys, then periodically prints gameplay —> match & host info's.
-  
-- Added new Monitors for play areas.
--  —> Kills humans (real players) outside; but teleports the bots back to the configured play areas.
--  —> Added new loop counter for players outside the configured play roi areas before death.
--  —> After spawn & deployment, teleports player near the configured & selected play areas if the area ring is active.
-  
-- Added New Watcher for removing dropped loots & items via engine runtime; near the death player positions.
-
----
-
 # Smart Bot System
 
 The framework now includes a dedicated smart bot behavior module:
@@ -177,6 +152,13 @@ fw_stim_boost_decay 0.1
 fw_inf_ammo
 fw_no_recoil
 
+fw_movespeed 1.0
+fw_inftacsprint 0
+
+fw_playring 1
+fw_ring_poi prison
+fw_ring_timer 5
+
 fw_status
 fw_debug
 
@@ -187,95 +169,27 @@ fw_noclip_sprint_speed
 
 ```
 
----
+# Current Release
 
-# Notes
+## Plunder Update — v1.8.8
 
-- `fw_nohud` is handled through the addon layer with a per-player watcher model.
-- bot controls are DVAR-driven.
-- smart bot behavior is isolated inside `gameplay/smartbots.gsc`.
-- stim boost configuration is owned by the addon layer.
-- infinite ammo supports weapon refill handling and framework equipment refill support.
-- bounce tools support visible marker spawning and configurable marker models.
-- `data.gsc` provides a clean save-load abstraction layer for future persistence work.
-- `fw_status` prints a quick framework state readout in-game.
-- `fw_debug` is a foundation toggle for future debug-only systems.
+This release expands the framework with a dedicated custom plunder gameplay.
 
----
+### Included in v1.8.8
+- New File added inside the framework —> gameplay/gameplay.gsc
 
-# Direction
+- Added New Dvar for move speed loop. — (fw_movespeed 1.0)
+- Added New Dvar for infinite tactical sprint loop. — (fw_inftacsprint 0)
 
-The current direction of **187 — FRAMEWORK** is:
-
-- cleaner ownership
-- fewer oversized files
-- framework-owned addon systems
-- reusable gameplay modules
-- stable DVAR-driven control
-- cleaner combat and engine helper separation
-- safer bot behavior expansion
-- per-player noclip ownership
-- removed bounce leftovers
-- future-ready data and progression structure
-
-This release is intended as a cleaner and stronger base for continued framework development.
+- Added & Fixed center coordinates for the configured play areas poi.
+-  —> (fw_ring_poi prison) — (control, factory, bio, tents) !!!
+-  —> Added new Handles for play areas activation after host deploys, then periodically prints gameplay —> match & host info's.
+  
+- Added new Monitors for play areas.
+-  —> Kills humans (real players) outside; but teleports the bots back to the configured play areas.
+-  —> Added new loop counter for players outside the configured play roi areas before death.
+-  —> After spawn & deployment, teleports player near the configured & selected play areas if the area ring is active.
+  
+- Added New Watcher for removing dropped loots & items via engine runtime; near the death player positions.
 
 ---
-
-# Better Plunder System — v1.8.7
-
-Added `framework/sources/gameplay/betterplunder.gsc` as a framework-owned Plunder/DMZ gameplay module.
-
-### Included
-- Plunder/DMZ rule control
-- safer match-end protection using `level.timelimitoverride`
-- optional custom POI play area / ring system
-- optional initial POI teleport
-- optional kill reward speed boost
-- optional reward perks and specialist bonus
-- optional infinite tactical sprint
-- optional infinite equipment / plates / ammo support
-- match info prints and manual match info trigger
-- optional dropped-loot cleanup
-- optional super ability blocking
-
-### Better Plunder DVARs
-
-```commands
-bp_enable
-bp_force_enable
-bp_prevent_match_end
-bp_timer_minutes
-bp_timer_refresh
-
-bp_playring
-bp_ring_poi
-bp_ring_timer
-bp_initial_teleport
-
-bp_rewardspeed
-bp_rewardspeed_speed
-bp_rewardspeed_length
-bp_rewardperks
-bp_rewardperks_maxperks
-bp_rewardperks_specialist
-
-bp_inftacsprint
-bp_infequip
-bp_infequip_delay
-bp_inf_guns
-bp_inf_lethals
-bp_inf_tac
-bp_inf_plates
-
-bp_matchinfo_trigger
-bp_matchinfo_interval
-bp_matchinfo_flags
-
-bp_delete_dropped_loot
-bp_blocksupers
-bp_allowsupers
-```
-
-### Notes
-The Better Plunder module avoids known unstable calls from the original script, including custom `level.ontimelimit` overrides and bot navigation queries.
