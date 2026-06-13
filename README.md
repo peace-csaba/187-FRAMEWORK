@@ -18,22 +18,26 @@ This project is designed as a long-term base for:
 
 # Current Release
 
-## Better Plunder Update — v1.8.7
+## Plunder Update — v1.8.8
 
-This release expands the framework with a dedicated smart bot behavior layer while keeping the project structure clean, modular, and framework-owned.
+This release expands the framework with a dedicated custom plunder gameplay.
 
-### Included in v1.8
-- added `framework/sources/gameplay/smartbots.gsc` as a dedicated smart bot module
-- added randomized bot rank and prestige metadata
-- added jump/crouch/prone behavior while bots are firing
-- added stuck-bot recovery helper
-- kept bot behavior isolated from `core/addons.gsc`
-- preserved the framework-owned addon layer under `framework/sources/core/addons.gsc`
-- kept `core/data.gsc` as the framework data layer
-- kept save/load ownership for SR, kills, and deaths
-- separated match-stat reset behavior from rank/SR handling
-- kept restart persistence backend-ready without hardcoding storage into gameplay files
-- continued cleanup of risky engine-facing helper ownership
+### Included in v1.8.8
+- New File added inside the framework —> gameplay/gameplay.gsc
+
+- Added New Dvar for move speed loop. — (fw_movespeed 1.0)
+- Added New Dvar for infinite tactical sprint loop. — (fw_inftacsprint 0)
+
+- Added & Fixed center coordinates for the configured play areas poi.
+-  —> (fw_ring_poi prison) — (control, factory, bio, tents) !!!
+-  —> Added new Handles for play areas activation after host deploys, then periodically prints gameplay —> match & host info's.
+  
+- Added new Monitors for play areas.
+-  —> Kills humans (real players) outside; but teleports the bots back to the configured play areas.
+-  —> Added new loop counter for players outside the configured play roi areas before death.
+-  —> After spawn & deployment, teleports player near the configured & selected play areas if the area ring is active.
+  
+- Added New Watcher for removing dropped loots & items via engine runtime; near the death player positions.
 
 ---
 

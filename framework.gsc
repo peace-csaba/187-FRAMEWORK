@@ -1,6 +1,6 @@
 // 📌 187 — FRAMEWORK
 
-// Version: 1.8.6
+// Version: 1.8.8
 
 ////////////////////////////////////////////////////////////////////////
 
@@ -96,13 +96,19 @@ init()
 
     setupFrameworkConfig();
 
-    custom_scripts\framework\sources\gameplay\perks::initPerkNames();
-    custom_scripts\framework\sources\gameplay\perks::buildPerkList();
-    custom_scripts\framework\sources\gameplay\smartbots::init();
+    // Core gameplay setup
+    custom_scripts\framework\sources\gameplay\perks::initPerkNames(); // gameplay/perks.gsc
+    custom_scripts\framework\sources\gameplay\perks::buildPerkList(); // gameplay/perks.gsc
 
+    // Gameplay modules
+    level thread custom_scripts\framework\sources\gameplay\smartbots::init(); // gameplay/smartbots.gsc
+    level thread custom_scripts\framework\sources\gameplay\gameplay::init(); // gameplay/gameplay.gsc
+
+    // Addons
     if (level.enableAddons)
-        level thread custom_scripts\framework\sources\core\addons::frameworkInit();
+        level thread custom_scripts\framework\sources\core\addons::frameworkInit(); // core/addons.gsc
 
+    // Player / match handlers
     level thread onPlayerConnected();
     level thread watchFrameworkInfilReset();
 }
