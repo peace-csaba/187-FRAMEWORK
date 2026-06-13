@@ -7,13 +7,90 @@
 ////////////////////////////////////////////////////////////////////////
 
 // Kill reward system
-//
-// Rank/SR system removed.
-// This file now only handles:
-// - kills
-// - deaths
-// - killstreak
-// - reward grants
+
+getRewardRankName(sr)
+{
+    if (!isDefined(sr))
+        sr = 250;
+
+    if (sr < 300)
+        return "^3Bronze";
+
+    if (sr < 350)
+        return "^7Silver";
+
+    if (sr < 400)
+        return "^3Gold";
+
+    if (sr < 450)
+        return "^5Platinum";
+
+    if (sr < 500)
+        return "^2Diamond";
+
+    return "^1Crimson";
+}
+
+////////////////////////////////////////////////////////////////////////
+
+// Returns:
+// <sr> / <rank>
+getCurrentSRText()
+{
+    if (!isDefined(self.frameworkSR))
+        self.frameworkSR = 250;
+
+    rank = getRewardRankName(self.frameworkSR);
+    return "^5" + self.frameworkSR + " ^7/ " + rank;
+}
+
+////////////////////////////////////////////////////////////////////////
+
+// Adds SR
+addPlayerSR(amount)
+{
+    if (!isDefined(self.frameworkSR))
+        self.frameworkSR = 250;
+
+    self.frameworkSR += amount;
+    self custom_scripts\framework\sources\core\data::saveFrameworkPlayerData();
+}
+
+////////////////////////////////////////////////////////////////////////
+
+// Removes SR and clamps at 0
+removePlayerSR(amount)
+{
+    if (!isDefined(self.frameworkSR))
+        self.frameworkSR = 250;
+
+    self.frameworkSR -= amount;
+
+    if (self.frameworkSR < 0)
+        self.frameworkSR = 0;
+
+    self custom_scripts\framework\sources\core\data::saveFrameworkPlayerData();
+}
+
+////////////////////////////////////////////////////////////////////////
+
+// [Ranks] line for kill-side SR gain
+showSRGain(amount)
+{
+    self custom_scripts\framework\sources\core\ui::prefixPrint(
+        "^7[Ranks]^7 • ^2+" + amount + " SR ^7• " + self getCurrentSRText()
+    );
+}
+
+////////////////////////////////////////////////////////////////////////
+
+// [Ranks] line for death-side SR loss
+showSRLoss(amount)
+{
+    self custom_scripts\framework\sources\core\ui::prefixPrint(
+        "^7[Ranks]^7 • ^1-" + amount + " SR ^7• " + self getCurrentSRText()
+    );
+}
 
 ////////////////////////////////////////////////////////////////////////
 
@@ -47,6 +124,9 @@ showDeathStats()
 ////////////////////////////////////////////////////////////////////////
 
 // [Rewards] line
+//
+// Order on kill is intentionally printed last in code so it appears
+// below Stats and Ranks in chat.
 getRewardsPlayer()
 {
     if (!isDefined(self.killStreak))
@@ -128,7 +208,13 @@ watchFrameworkDeaths()
         self.killStreak = 0;
         self.specialistActive = false;
 
+        self removePlayerSR(5);
+        wait 0.05;
+
+        self showSRLoss(5);
         self showDeathStats();
+
+        self custom_scripts\framework\sources\core\data::saveFrameworkPlayerData();
     }
 }
 
@@ -140,6 +226,9 @@ killRewards()
     self endon("disconnect");
     self endon("stop_killRewards");
     level endon("game_ended");
+
+    if (!isDefined(self.frameworkSR))
+        self.frameworkSR = 250;
 
     if (!isDefined(self.frameworkKills))
         self.frameworkKills = 0;
@@ -165,9 +254,13 @@ killRewards()
             continue;
 
         self.frameworkKills++;
+        self addPlayerSR(10);
         self.killStreak++;
 
         self getRewardsPlayer();
+        self showSRGain(10);
         self showKillStats();
+
+        self custom_scripts\framework\sources\core\data::saveFrameworkPlayerData();
     }
 }

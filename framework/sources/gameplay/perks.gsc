@@ -174,7 +174,7 @@ getMappedPerkSplash(perk)
 
 ////////////////////////////////////////////////////////////////////////
 
-// Get Ui -> Perk Splashes
+// Lower / old normal splash
 getUiPerkSplash(perk)
 {
     switch (perk)
@@ -222,11 +222,60 @@ getUiPerkSplash(perk)
 
 ////////////////////////////////////////////////////////////////////////
 
+// Lower / old BR splash
+getUiPerkSecondSplash(perk)
+{
+    switch (perk)
+    {
+        case "specialty_blastshield":
+            return "br_specialty_blastshield";
+
+        case "specialty_lightweight":
+            return "br_specialty_lightweight";
+
+        case "specialty_marathon":
+            return "br_specialty_marathon";
+
+        case "specialty_quieter":
+            return "br_specialty_quieter";
+
+        case "specialty_quickswap":
+            return "br_specialty_quickswap";
+
+        case "specialty_fastreload":
+            return "br_specialty_fastreload";
+
+        case "specialty_boom":
+            return "br_specialty_boom";
+
+        case "specialty_selectivehearing":
+            return "br_specialty_selectivehearing";
+
+        case "specialty_holdbreath":
+            return "br_specialty_holdbreath";
+
+        case "specialty_quickdraw":
+            return "br_specialty_quickdraw";
+
+        case "specialty_steadyaimpro":
+            return "br_specialty_steadyaim";
+
+        case "specialty_specialist_bonus":
+            return "";
+
+        default:
+            return "";
+    }
+}
+
+////////////////////////////////////////////////////////////////////////
+
 showPerkSplashes(perk)
 {
     mappedSplash = getMappedPerkSplash(perk);
     uiPerk = getUiPerk(perk);
     uiSplash = getUiPerkSplash(uiPerk);
+    uiSecondSplash = getUiPerkSecondSplash(uiPerk);
 
     if (isDefined(mappedSplash) && mappedSplash != "")
         self thread scripts\mp\hud_message::showsplash(mappedSplash);
@@ -235,6 +284,12 @@ showPerkSplashes(perk)
     {
         wait 0.01;
         self thread scripts\mp\hud_message::showsplash(uiSplash);
+    }
+
+    if (isDefined(uiSecondSplash) && uiSecondSplash != "")
+    {
+        wait 0.01;
+        self thread scripts\mp\hud_message::showsplash(uiSecondSplash);
     }
 
     if (isCustomBrPerk(perk))
