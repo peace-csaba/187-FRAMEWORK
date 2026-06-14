@@ -92,10 +92,7 @@ fw_bot_team autoassign
 fw_bot_team allies
 fw_bot_team axis
 
-fw_bot_difficulty regular
-fw_bot_difficulty recruit
-fw_bot_difficulty hardened
-fw_bot_difficulty veteran
+fw_bot_difficulty regular | recruit | hardened | veteran |
 
 fw_addbot
 fw_kickbot
@@ -104,21 +101,22 @@ fw_stim_boost_speed 1.05
 fw_stim_boost_duration 10
 fw_stim_boost_decay 0.1
 
-fw_inf_ammo
-fw_no_recoil
+fw_inf_ammo 0
+fw_no_recoil 0
 
 fw_movespeed 1.0
 fw_inftacsprint 0
 
 fw_playring 1
-fw_ring_poi prison
+fw_ring_poi prison | control | factory | bio | tents
 fw_ring_timer 5
 
-fw_status
-fw_debug
+fw_status 0
+fw_debug 0
 
-fw_noclip
-fw_noclip_bind
-fw_noclip_speed
-fw_noclip_sprint_speed
+fw_noclip 1
+fw_noclip_bind 1
+fw_noclip_speed 33
+fw_noclip_sprint_speed 80
+
 ```

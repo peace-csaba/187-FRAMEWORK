@@ -74,6 +74,8 @@ init()
     level thread monitorGameplayCommandMessages();
 }
 
+////////////////////////////////////////////////////////////////////////
+
 // Starts per-player spawn logic whenever a player connects.
 onPlayerConnectedLoop()
 {
@@ -86,6 +88,8 @@ onPlayerConnectedLoop()
         player thread playerSpawnLoop();
     }
 }
+
+////////////////////////////////////////////////////////////////////////
 
 // Sets Plunder/DMZ rule DVARs: high score limits, no overtime, no normal win condition.
 setupPlunderDvars()
@@ -102,6 +106,8 @@ setupPlunderDvars()
     setdvar( "scr_bmo_score_requires_banking", 1 );
     setdvar( "scr_bmo_eom_bank_to_end", 0 );
 }
+
+////////////////////////////////////////////////////////////////////////
 
 // Keeps the match timer paused/extended and prevents normal ending/exfil timing.
 preventMatchEndLoop()
@@ -328,7 +334,7 @@ monitorMatchInfo()
     {
         if ( isdefined( player ) && !isbot( player ) )
         {
-            player custom_scripts\framework\sources\core\ui::prefixPrintBold( "^3HOST DEPLOYED: ^7Ring activates in 15 seconds!" );
+            player custom_scripts\framework\sources\core\ui::prefixPrintBold( "^7[Gameplay]^7 » ^3core/gameplay.gsc — activates in 15 seconds!" );
             player playlocalsound( "ui_mp_timer_countdown" );
         }
     }
@@ -341,7 +347,7 @@ monitorMatchInfo()
     {
         if ( isdefined( player ) && !isbot( player ) )
         {
-            player custom_scripts\framework\sources\core\ui::prefixPrintBold( "^5[PLAY AREA]^7 » ^1THE PLAY AREA IS NOW ACTIVE!" );
+            player custom_scripts\framework\sources\core\ui::prefixPrintBold( "^7[Gameplay]^7 » ^2core/gameplay.gsc — is active now!" );
             player playlocalsound( "br_circle_closing_warning" );
         }
     }
@@ -417,7 +423,7 @@ playRingMonitor()
         self.is_out_of_bounds = 0;
                 if ( !isbot( self ) )
                 {
-                    self custom_scripts\framework\sources\core\ui::prefixPrintBold( "^5[PLAY AREA]^7 » ^2You have returned to the play area." );
+                    self custom_scripts\framework\sources\core\ui::prefixPrintBold( "^5[AREA]^7 » ^2You returned to the play area." );
                 }
             }
         }
@@ -445,7 +451,7 @@ outsideRingCountdown()
             while ( istrue( self.is_out_of_bounds ) && isalive( self ) )
             {
                 var_time_left = var_max_time - var_time_spent;
-                self custom_scripts\framework\sources\core\ui::prefixPrintBold( "^5[PLAY AREA]^7 » ^1RETURN TO THE PLAY AREA:^7 " + var_time_left + "s" );
+                self custom_scripts\framework\sources\core\ui::prefixPrintBold( "^5[Area]^7 » ^1Return to the play area:^7 " + var_time_left + "s" );
 
                 wait 1.0;
                 var_time_spent++;
@@ -555,9 +561,9 @@ monitorGameplayCommandMessages()
                 if ( isdefined( player ) && !isbot( player ) )
                 {
                     if ( currentPlayRing == 1 )
-                        player custom_scripts\framework\sources\core\ui::prefixPrint( "^5[PLAY AREA]^7 » ^2Play Ring:^7 ^2Enabled" );
+                        player custom_scripts\framework\sources\core\ui::prefixPrint( "^5[AREA]^7 » ^2Play Ring:^7 ^2Enabled" );
                     else
-                        player custom_scripts\framework\sources\core\ui::prefixPrint( "^5[PLAY AREA]^7 » ^2Play Ring:^7 ^1Disabled" );
+                        player custom_scripts\framework\sources\core\ui::prefixPrint( "^5[AREA]^7 » ^2Play Ring:^7 ^1Disabled" );
                 }
             }
         }
@@ -571,7 +577,14 @@ monitorGameplayCommandMessages()
             foreach ( player in level.players )
             {
                 if ( isdefined( player ) && !isbot( player ) )
-                    player custom_scripts\framework\sources\core\ui::prefixPrint( "^2Current Play Area is ^7" + currentPoiName + "^2." );
+                {
+                    player iprintln(
+                        level.prefix +
+                        "^1[DVAR]^7 » ^2Play Area:^7 ^3" +
+                        currentPoiName +
+                        " ^7(updated)"
+                    );
+                }
             }
         }
 
@@ -583,7 +596,14 @@ monitorGameplayCommandMessages()
             foreach ( player in level.players )
             {
                 if ( isdefined( player ) && !isbot( player ) )
-                    player custom_scripts\framework\sources\core\ui::prefixPrint( "^5[PLAY AREA]^7 » ^3Return Timer:^7 " + currentRingTimer + "s" );
+                {
+                    player iprintln(
+                        level.prefix +
+                        "^1[DVAR]^7 » ^2Play Area Return Interval:^7 ^3" +
+                        currentRingTimer +
+                        "s ^7(updated)"
+                    );
+                }
             }
         }
 
@@ -595,7 +615,14 @@ monitorGameplayCommandMessages()
             foreach ( player in level.players )
             {
                 if ( isdefined( player ) && !isbot( player ) )
-                    player custom_scripts\framework\sources\core\ui::prefixPrint( "^5[MATCH INFO]^7 » ^3Interval:^7 " + currentMatchInfoInterval + "s" );
+                {
+                    player iprintln(
+                        level.prefix +
+                        "^1[DVAR]^7 » ^2Gameplay Messages Interval:^7 ^3" +
+                        currentMatchInfoInterval +
+                        "s ^7(updated)"
+                    );
+                }
             }
         }
 
@@ -607,7 +634,14 @@ monitorGameplayCommandMessages()
             foreach ( player in level.players )
             {
                 if ( isdefined( player ) && !isbot( player ) )
-                    player custom_scripts\framework\sources\core\ui::prefixPrint( "^5[MATCH INFO]^7 » ^3Flags:^7 " + currentMatchInfoFlags );
+                {
+                    player iprintln(
+                        level.prefix +
+                        "^1[DVAR]^7 » ^2Gameplay Info Flags:^7 ^3" +
+                        currentMatchInfoFlags +
+                        " ^7(updated)"
+                    );
+                }
             }
         }
     }
@@ -697,26 +731,25 @@ monitorManualMatchInfoTrigger()
             {
                 if ( isdefined( player ) && !isbot( player ) )
                 {
-                    player custom_scripts\framework\sources\core\ui::prefixPrintBold( "^5[MATCH INFO]^7 » ^2187 Framework Status" );
+
+                    player custom_scripts\framework\sources\core\ui::prefixPrint( "^7[Area]^7 » ^2Current Play Area is ^7" + var_poi_name + "^2." );
 
                     if ( var_flags & 1 )
-                        player custom_scripts\framework\sources\core\ui::prefixPrint( "^5[MATCH]^7 » ^3Host:^7 " + var_host );
+                        player custom_scripts\framework\sources\core\ui::prefixPrint( "^7[Host]^7 » ^3Owner:^7 " + var_host );
+
+                    if ( var_flags & 4 )
+                        player custom_scripts\framework\sources\core\ui::prefixPrint( "^7[Host]^7 » ^5Running since:^7 " + var_mins + "^3 - Minutes" );
 
                     if ( var_flags & 2 )
                     {
                         if ( isdefined( var_leader ) )
-                            player custom_scripts\framework\sources\core\ui::prefixPrint( "^5[COMBAT]^7 » ^1Kill Leader:^7 " + var_leader.name + " ^3(" + var_highest + " Kills)" );
+                            player custom_scripts\framework\sources\core\ui::prefixPrint( "^7[Host]^7 » ^1Kill Leader:^7 " + var_leader.name + " ^3(" + var_highest + " Kills)" );
                         else
-                            player custom_scripts\framework\sources\core\ui::prefixPrint( "^5[COMBAT]^7 » ^1Kill Leader:^7 None" );
+                            player custom_scripts\framework\sources\core\ui::prefixPrint( "^7[Host]^7 » ^1Kill Leader:^7 None" );
                     }
 
-                    if ( var_flags & 4 )
-                        player custom_scripts\framework\sources\core\ui::prefixPrint( "^5[TIME]^7 » ^5HOST RUNNING SINCE:^7 " + var_mins + ":" + var_sec_str + "^3 - Minutes" );
-
                     if ( var_flags & 8 )
-                        player custom_scripts\framework\sources\core\ui::prefixPrint( "^5[ONLINE]^7 » ^2Players:^7 " + var_real_players + " ^7• ^3Bots:^7 " + var_bots );
-
-                    player custom_scripts\framework\sources\core\ui::prefixPrint( "^2Current Play Area is ^7" + var_poi_name + "^2." );
+                        player custom_scripts\framework\sources\core\ui::prefixPrint( "^5[Online]^7 » ^2Players:^7 " + var_real_players + " ^7• ^3Bots:^7 " + var_bots );
                 }
             }
         }
@@ -757,6 +790,8 @@ initialPoiTeleport()
         var_teleport_pos = ( var_center[0] + var_offset_x, var_center[1] + var_offset_y, self.origin[2] );
         self setorigin( var_teleport_pos );
 
-        self custom_scripts\framework\sources\core\ui::prefixPrint( "^2Current Play Area is ^7" + var_poi_name + "^2." );
+        //self custom_scripts\framework\sources\core\ui::prefixPrint( "^5[AREA]^7 » ^2Current Play Area is ^7" + var_poi_name + "^2." );
+
+        self custom_scripts\framework\sources\core\ui::prefixPrintBold( "^5[AREA]^7 » ^2Current Play Area ^7 »" + var_poi_name + "^2." );
     }
 }

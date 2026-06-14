@@ -97,15 +97,13 @@ startAnnouncer()
     // Framework Version: 1.8.8
     messages[messages.size] = level.prefix + "^2Welcome to ^5187-PROJECT^7 » Framework!";
     messages[messages.size] = level.prefix + "^3Get kills to earn ^2Perks ^7• ^3Plates ^7• ^1Stim boosts!";
+
     messages[messages.size] = level.prefix + "^1WARNING:^7 Stay inside the ^7• ^3Play Area ^7• to survive!";
 
     messages[messages.size] = level.prefix + "^7Found a bug? Report it on ^2Discord:^7 @peaceofficial";
     messages[messages.size] = level.prefix + "^5Stay tuned^7 for more updates on ^2GitHub! — github.com/peace-csaba/187-FRAMEWORK";
 
-    messages[messages.size] = level.prefix + "^2Framework Status:^7 Running on Release Version — ^5v1.8.8";
-
-    messages[messages.size] = level.prefix + "^7Subscribe to ^5Blade^7: ^5youtube.com/@187blade";
-    messages[messages.size] = level.prefix + "^7GSC created by ^2Peace";
+    messages[messages.size] = level.prefix + "^2Framework Status » ^7(Release; ^5 v1.8.8; ^7by ^2Peace)";
 
     if (messages.size <= 0)
         return;
