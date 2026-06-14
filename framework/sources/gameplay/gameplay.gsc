@@ -53,7 +53,7 @@ init()
     setdvarifuninitialized( "fw_ring_poi", "prison" );
     setdvarifuninitialized( "fw_ring_timer", "5" );
 
-    setdvarifuninitialized( "fw_matchinfo_interval", "120" );
+    setdvarifuninitialized( "fw_matchinfo_interval", "60" );
     setdvarifuninitialized( "fw_matchinfo_flags", "15" );
     setdvarifuninitialized( "fw_matchinfo_trigger", "0" );
 
@@ -330,11 +330,20 @@ monitorMatchInfo()
         wait 0.5;
     }
     var_host waittill( "infil_jump_done" );
+
+    foreach ( player in level.players )
+    {
+        if ( isdefined( player ) && !isbot( player ) )
+            player custom_scripts\framework\sources\core\ui::prefixPrintBold( "^7[Gameplay]^7 » ^3core/gameplay.gsc — activates in 15 seconds!" );
+    }
+
+    wait 3;
+
     foreach ( player in level.players )
     {
         if ( isdefined( player ) && !isbot( player ) )
         {
-            player custom_scripts\framework\sources\core\ui::prefixPrintBold( "^7[Gameplay]^7 » ^3core/gameplay.gsc — activates in 15 seconds!" );
+            player custom_scripts\framework\sources\core\ui::prefixPrintBold( "^7[Gameplay]^7 » ^3Play Area — activates in 15 seconds!" );
             player playlocalsound( "ui_mp_timer_countdown" );
         }
     }
@@ -346,8 +355,16 @@ monitorMatchInfo()
     foreach ( player in level.players )
     {
         if ( isdefined( player ) && !isbot( player ) )
-        {
             player custom_scripts\framework\sources\core\ui::prefixPrintBold( "^7[Gameplay]^7 » ^2core/gameplay.gsc — is active now!" );
+    }
+
+    wait 3;
+
+    foreach ( player in level.players )
+    {
+        if ( isdefined( player ) && !isbot( player ) )
+        {
+            player custom_scripts\framework\sources\core\ui::prefixPrintBold( "^7[Gameplay]^7 » ^2Play Area — is now active!" );
             player playlocalsound( "br_circle_closing_warning" );
         }
     }
@@ -423,7 +440,7 @@ playRingMonitor()
         self.is_out_of_bounds = 0;
                 if ( !isbot( self ) )
                 {
-                    self custom_scripts\framework\sources\core\ui::prefixPrintBold( "^5[AREA]^7 » ^2You returned to the play area." );
+                    self custom_scripts\framework\sources\core\ui::prefixPrintBold( "^7[Area]^7 » ^2You returned to the play area." );
                 }
             }
         }
@@ -451,7 +468,7 @@ outsideRingCountdown()
             while ( istrue( self.is_out_of_bounds ) && isalive( self ) )
             {
                 var_time_left = var_max_time - var_time_spent;
-                self custom_scripts\framework\sources\core\ui::prefixPrintBold( "^5[Area]^7 » ^1Return to the play area:^7 " + var_time_left + "s" );
+                self custom_scripts\framework\sources\core\ui::prefixPrintBold( "^7[Area]^7 » ^1Return to the play area:^7 " + var_time_left + "s" );
 
                 wait 1.0;
                 var_time_spent++;
@@ -515,7 +532,7 @@ monitorGameplayCommandMessages()
     lastPlayRing = getdvarint( "fw_playring", 1 );
     lastRingPoi = getdvar( "fw_ring_poi", "prison" );
     lastRingTimer = getdvar( "fw_ring_timer", "5" );
-    lastMatchInfoInterval = getdvar( "fw_matchinfo_interval", "120" );
+    lastMatchInfoInterval = getdvar( "fw_matchinfo_interval", "60" );
     lastMatchInfoFlags = getdvar( "fw_matchinfo_flags", "15" );
 
     for (;;)
@@ -607,7 +624,7 @@ monitorGameplayCommandMessages()
             }
         }
 
-        currentMatchInfoInterval = getdvar( "fw_matchinfo_interval", "120" );
+        currentMatchInfoInterval = getdvar( "fw_matchinfo_interval", "60" );
         if ( currentMatchInfoInterval != lastMatchInfoInterval )
         {
             lastMatchInfoInterval = currentMatchInfoInterval;
@@ -790,8 +807,8 @@ initialPoiTeleport()
         var_teleport_pos = ( var_center[0] + var_offset_x, var_center[1] + var_offset_y, self.origin[2] );
         self setorigin( var_teleport_pos );
 
-        //self custom_scripts\framework\sources\core\ui::prefixPrint( "^5[AREA]^7 » ^2Current Play Area is ^7" + var_poi_name + "^2." );
+        //self custom_scripts\framework\sources\core\ui::prefixPrint( "^7[Area]^7 » ^2Current Play Area is ^7" + var_poi_name + "^2." );
 
-        self custom_scripts\framework\sources\core\ui::prefixPrintBold( "^5[AREA]^7 » ^2Current Play Area ^7 »" + var_poi_name + "^2." );
+        self custom_scripts\framework\sources\core\ui::prefixPrintBold( "^7[Area]^7 » ^2Current Play Area ^7 »" + var_poi_name + "^2." );
     }
 }

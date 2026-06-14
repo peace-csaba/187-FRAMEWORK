@@ -101,7 +101,7 @@ startAnnouncer()
     messages[messages.size] = level.prefix + "^1WARNING:^7 Stay inside the ^7• ^3Play Area ^7• to survive!";
 
     messages[messages.size] = level.prefix + "^7Found a bug? Report it on ^2Discord:^7 @peaceofficial";
-    messages[messages.size] = level.prefix + "^5Stay tuned^7 for more updates on ^2GitHub! — github.com/peace-csaba/187-FRAMEWORK";
+    //messages[messages.size] = level.prefix + "^5Stay tuned^7 for more updates on ^7GitHub & ^5Discord — github.com/peace-csaba/187-FRAMEWORK";
 
     messages[messages.size] = level.prefix + "^2Framework Status » ^7(Release; ^5 v1.8.8; ^7by ^2Peace)";
 

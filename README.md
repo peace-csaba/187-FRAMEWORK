@@ -94,6 +94,11 @@ fw_bot_team axis
 
 fw_bot_difficulty regular | recruit | hardened | veteran |
 
+fw_bot_aggressive 0
+fw_bot_aggressive_interval 0
+
+fw_bot_boss 0
+
 fw_addbot
 fw_kickbot
 
@@ -108,8 +113,12 @@ fw_movespeed 1.0
 fw_inftacsprint 0
 
 fw_playring 1
-fw_ring_poi prison | control | factory | bio | tents
+fw_ring_poi prison | control | factory | bio | tents |
 fw_ring_timer 5
+
+fw_matchinfo_interval 60
+fw_matchinfo_flags 15
+fw_matchinfo_trigger 0
 
 fw_status 0
 fw_debug 0
